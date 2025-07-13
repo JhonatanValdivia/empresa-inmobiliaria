@@ -8,55 +8,58 @@ import java.util.Objects;
 @Embeddable // indica que la clase se puede integrar en una entidad y no tiene su propia identidad independiente.
 public class FechaVenta
 {
-    private LocalDate fechaVenta;
+    private int dia;
+    private int mes;
+    private int año;
 
-    public FechaVenta(){}
-    public FechaVenta(LocalDate fechaVenta){
-        if(fechaVenta==null){
-            throw  new IllegalArgumentException("La fecha no puede ser nula");
-        }
-        if(fechaVenta.isAfter(LocalDate.now())){
-            throw new IllegalArgumentException("La fecha no puede ser en futuro");
-        }
-
-        this.fechaVenta=fechaVenta;
-    }
-    //solo get, set no porque es un objeto de valor inmutable
-    public LocalDate getFechaVenta(){
-        return fechaVenta;
+    public FechaVenta() {
     }
 
-    public boolean esHoy(){
-        return fechaVenta.isEqual(LocalDate.now());
+    public FechaVenta(int dia, int mes, int año) {
+        this.dia = dia;
+        this.mes = mes;
+        this.año = año;
     }
 
-    public boolean esAntesDe(LocalDate otraFecha){
-        return fechaVenta.isBefore(otraFecha);
+    public int getDia() {
+        return dia;
     }
 
-    public boolean esDespuesDe(LocalDate otraFecha){
-        return fechaVenta.isAfter(otraFecha);
+    public void setDia(int dia) {
+        this.dia = dia;
     }
-    //equals() y hascode() necesarios para que funcione como Object Value
-    @Override
-    public boolean equals(Object object){
-        if(this==object)
-            return true;
 
-        if(!(object instanceof FechaVenta))
-            return false;
-
-        FechaVenta fecha=(FechaVenta) object;
-        return fechaVenta.equals(fecha.fechaVenta);
+    public int getMes() {
+        return mes;
     }
-    @Override
-    public int hashCode(){
-        return Objects.hash(fechaVenta);
+
+    public void setMes(int mes) {
+        this.mes = mes;
+    }
+
+    public int getAño() {
+        return año;
+    }
+
+    public void setAño(int año) {
+        this.año = año;
     }
 
     @Override
-    public String toString(){
-        return fechaVenta.toString(); // devuelve el valor de la fecha "yyyy-MM-dd"
+    public String toString() {
+        return dia + "/" + mes + "/" + año;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof FechaVenta)) return false;
+        FechaVenta fecha = (FechaVenta) obj;
+        return dia == fecha.dia && mes == fecha.mes && año == fecha.año;
+    }
+
+    @Override
+    public int hashCode() {
+        return dia + mes * 31 + año * 31 * 31;
+    }
 }
