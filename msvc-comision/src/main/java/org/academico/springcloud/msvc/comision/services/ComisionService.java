@@ -22,14 +22,10 @@ public interface ComisionService
 
     //métodos remotos
     Optional<Venta> obtenerVenta(Long ventaId);
-    // Crear comisión automática para una venta específica
-   Optional <Comision> crearComisionParaVenta(Long ventaId, TipoComision tipoComision);
 
     // Recalcular comisión si la venta cambió
-    void recalcularComision(Long comisionId);
+    BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision);
 
-    // Anular comisión si la venta fue anulada
-    void anularComisionesPorVenta(Long ventaId);
     List<Comision> listarPorVenta(Long ventaId);
 
     void cambiarEstadoComision(Long comisionId, EstadoComision nuevoEstado);

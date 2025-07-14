@@ -44,6 +44,11 @@ public class ComisionServiceImpl implements ComisionService {
     @Override
     @Transactional
     public Comision guardar(Comision comision) {
+        if (comision.getMontoComision() == null) {
+            Venta venta = ventaClientRest.detalle(comision.getVentaId());
+            BigDecimal monto = calcularComision(venta.getPrecioVenta().getPrecioVenta(), comision.getTipoComision());
+            comision.setMontoComision(new MontoComision(monto, venta.getPrecioVenta().getMoneda()));
+        }
         return comisionRepository.save(comision);
     }
 
@@ -79,53 +84,10 @@ public class ComisionServiceImpl implements ComisionService {
 
     @Override
     @Transactional
-    public Optional<Comision> crearComisionParaVenta(Long ventaId, TipoComision tipoComision) {
-        Venta venta = ventaClientRest.detalle(ventaId);
-
-        BigDecimal montoBase = venta.getPrecioVenta().getPrecioVenta();
-        BigDecimal montoComision;
-
-        if (tipoComision == TipoComision.PORCENTAJE) {
-            montoComision = montoBase.multiply(new BigDecimal("0.10")); // 10%
-        } else {
-            montoComision = new BigDecimal("100.00"); // comisión fija
-        }
-
-        Comision comision = new Comision();
-        comision.setVentaId(ventaId);
-        comision.setTipoComision(tipoComision);
-        comision.setEstadoComision(EstadoComision.PENDIENTE);
-        comision.setMontoComision(new MontoComision(montoComision, venta.getPrecioVenta().getMoneda()));
-
-        return Optional.of(comisionRepository.save(comision));
-    }
-
-    @Override
-    @Transactional
-    public void recalcularComision(Long comisionId) {
-        Comision comision = comisionRepository.findById(comisionId)
-                .orElseThrow(() -> new RuntimeException("Comisión no encontrada"));
-        Venta venta = ventaClientRest.detalle(comision.getVentaId());
-
-        BigDecimal nuevoMonto = comision.getTipoComision() == TipoComision.PORCENTAJE ?
-                venta.getPrecioVenta().getPrecioVenta().multiply(new BigDecimal("0.10")) :
-                new BigDecimal("100.00");
-
-        comision.setMontoComision(new MontoComision(nuevoMonto, venta.getPrecioVenta().getMoneda()));
-        comisionRepository.save(comision);
-    }
-
-    @Override
-    @Transactional
-    public void anularComisionesPorVenta(Long ventaId) {
-        Venta venta = ventaClientRest.detalle(ventaId);
-        if ("ANULADA".equals(venta.getEstadoVenta())) {
-            List<Comision> comisiones = comisionRepository.findByVentaId(ventaId);
-            for (Comision c : comisiones) {
-                c.setEstadoComision(EstadoComision.ANULADA);
-                comisionRepository.save(c);
-            }
-        }
+    public BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision) {
+        return tipoComision == TipoComision.PORCENTAJE
+                ? montoBase.multiply(new BigDecimal("0.10"))
+                : new BigDecimal("400.00");
     }
 
     @Override
@@ -139,7 +101,7 @@ public class ComisionServiceImpl implements ComisionService {
     public void cambiarEstadoComision(Long comisionId, EstadoComision nuevoEstado) {
         Comision comision = comisionRepository.findById(comisionId)
                 .orElseThrow(() -> new RuntimeException("Comisión no encontrada"));
-        comision.setEstadoComision(nuevoEstado);
+        comision.actualizarEstado(nuevoEstado);
         comisionRepository.save(comision);
     }
 

@@ -7,6 +7,8 @@ import org.academico.springcloud.msvc.comision.models.enums.TipoComision;
 import org.academico.springcloud.msvc.comision.models.valueObjects.FechaPagoComision;
 import org.academico.springcloud.msvc.comision.models.valueObjects.MontoComision;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "comisiones")
 public class Comision
@@ -26,7 +28,6 @@ public class Comision
     private MontoComision montoComision;//OV
 
     @Embedded
-    @AttributeOverride(name = "fechaPagoComision", column = @Column(name = "fecha_pago_comision"))
     private FechaPagoComision fechaPagoComision; //OV
 
     //IdVenta
@@ -84,5 +85,31 @@ public class Comision
 
     public void setVentaId(Long ventaId) {
         this.ventaId = ventaId;
+    }
+    public boolean esValida() {
+        return ventaId != null && montoComision != null && tipoComision != null;
+    }
+
+    public void calcularComision(BigDecimal montoBase) {
+        BigDecimal calculado = tipoComision == TipoComision.PORCENTAJE
+                ? montoBase.multiply(new BigDecimal("0.10"))
+                : new BigDecimal("100.00");
+        this.montoComision = new MontoComision(calculado, this.montoComision.getMoneda());
+    }
+
+    public void pagarComision() {
+        this.estadoComision = EstadoComision.PAGADA;
+    }
+
+    public void anularComision() {
+        this.estadoComision = EstadoComision.ANULADA;
+    }
+
+    public void actualizarEstado(EstadoComision nuevoEstado) {
+        this.estadoComision = nuevoEstado;
+    }
+
+    public boolean verificarPago() {
+        return EstadoComision.PAGADA.equals(this.estadoComision);
     }
 }

@@ -85,39 +85,6 @@ public class ComisionController {
         }
     }
 
-    @PostMapping("/crear-para-venta/{ventaId}")
-    public ResponseEntity<?> crearComisionParaVenta(@PathVariable Long ventaId,
-                                                    @RequestParam TipoComision tipoComision) {
-        try {
-            Optional<Comision> comision = comisionService.crearComisionParaVenta(ventaId, tipoComision);
-            return ResponseEntity.status(HttpStatus.CREATED).body(comision);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("mensaje", e.getMessage()));
-        }
-    }
-
-    @PutMapping("/recalcular/{comisionId}")
-    public ResponseEntity<?> recalcularComision(@PathVariable Long comisionId) {
-        try {
-            comisionService.recalcularComision(comisionId);
-            return ResponseEntity.ok(Collections.singletonMap("mensaje", "Comisión recalculada correctamente"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("mensaje", e.getMessage()));
-        }
-    }
-
-    @PutMapping("/anular-por-venta/{ventaId}")
-    public ResponseEntity<?> anularComisionesPorVenta(@PathVariable Long ventaId) {
-        try {
-            comisionService.anularComisionesPorVenta(ventaId);
-            return ResponseEntity.ok(Collections.singletonMap("mensaje", "Comisiones anuladas correctamente"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("mensaje", e.getMessage()));
-        }
-    }
     @GetMapping("/venta/{ventaId}/listar")
     public ResponseEntity<?> listarPorVenta(@PathVariable Long ventaId) {
         return ResponseEntity.ok(comisionService.listarPorVenta(ventaId));
@@ -137,5 +104,28 @@ public class ComisionController {
     @GetMapping("/activas")
     public ResponseEntity<?> listarActivas() {
         return ResponseEntity.ok(comisionService.listarActivas());
+    }
+
+    @PutMapping("/{comisionId}/pagar")
+    public ResponseEntity<?> pagarComision(@PathVariable Long comisionId) {
+        Optional<Comision> comisionOp = comisionService.porId(comisionId);
+        if (comisionOp.isPresent()) {
+            Comision comision = comisionOp.get();
+            comision.pagarComision();
+            comisionService.guardar(comision);
+            return ResponseEntity.ok(Collections.singletonMap("mensaje", "Comisión marcada como pagada"));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{comisionId}/verificar-pago")
+    public ResponseEntity<?> verificarPago(@PathVariable Long comisionId) {
+        Optional<Comision> comisionOp = comisionService.porId(comisionId);
+        if (comisionOp.isPresent()) {
+            Comision comision = comisionOp.get();
+            boolean pagada = comision.verificarPago();
+            return ResponseEntity.ok(Collections.singletonMap("pagada", pagada));
+        }
+        return ResponseEntity.notFound().build();
     }
 }

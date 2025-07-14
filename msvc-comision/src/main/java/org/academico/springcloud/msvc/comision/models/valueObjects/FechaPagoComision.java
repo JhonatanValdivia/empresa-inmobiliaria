@@ -15,6 +15,28 @@ public class FechaPagoComision {
     }
 
     public FechaPagoComision(int dia, int mes, int año) {
+        if (mes < 1 || mes > 12) {
+            throw new IllegalArgumentException("Mes inválido: debe estar entre 1 y 12");
+        }
+        if (año < 1900) {
+            throw new IllegalArgumentException("Año inválido: debe ser mayor a 1900");
+        }
+        if (dia < 1 || dia > 31) {
+            throw new IllegalArgumentException("Día inválido: debe estar entre 1 y 31");
+        }
+
+        // detecta si el día es válido para ese mes/año
+        try {
+            LocalDate.of(año, mes, dia);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Fecha inválida: combinación día-mes-año incorrecta");
+        }
+
+        // no permitir fechas pasadas
+        if (LocalDate.of(año, mes, dia).isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Fecha inválida: no puede ser en el pasado");
+        }
+
         this.dia = dia;
         this.mes = mes;
         this.año = año;
@@ -25,8 +47,7 @@ public class FechaPagoComision {
     }
 
     public int getMes() {
-        return mes;
-    }
+        return mes;}
 
     public int getAño() {
         return año;
@@ -48,7 +69,8 @@ public class FechaPagoComision {
 
     @Override
     public int hashCode() {
-        return dia + mes * 31 + año * 31 * 31;
+
+        return Objects.hash(dia, mes, año);
     }
 }
 

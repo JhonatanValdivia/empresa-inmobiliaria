@@ -38,6 +38,9 @@ private VentaRepository ventaRepository;
     @Override
     @Transactional
     public Venta guardar(Venta venta) {
+        if (venta.getId() == null) {
+            venta.registrarVenta();
+        }
         return ventaRepository.save(venta);
     }
 
@@ -78,26 +81,18 @@ private VentaRepository ventaRepository;
         nuevoDetalle.setVenta(venta);
 
         venta.agregarDetalleVenta(nuevoDetalle);
-
         ventaRepository.save(venta);
     }
 
     @Override
     @Transactional
     public void eliminarDetalle(Long ventaId, Long detalleId) {
-        Venta venta=ventaRepository.findById(ventaId).orElseThrow(()-> new RuntimeException("Venta no encontrada"));
-        DetalleVenta detalleAEliminar = null;
-        for (DetalleVenta d : venta.getDetalleVentaLista()) {
-            if (d.getId().equals(detalleId)) {
-                detalleAEliminar = d;
-                break;
-            }
-        }
-
-        if (detalleAEliminar == null) {
-            throw new RuntimeException("DetalleVenta no encontrado");
-        }
-
+        Venta venta = ventaRepository.findById(ventaId)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+        DetalleVenta detalleAEliminar = venta.getDetalleVentaLista().stream()
+                .filter(d -> d.getId().equals(detalleId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("DetalleVenta no encontrado"));
         venta.eliminarDetalleVenta(detalleAEliminar);
         ventaRepository.save(venta);
     }

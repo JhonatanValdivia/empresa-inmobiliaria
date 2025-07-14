@@ -24,7 +24,6 @@ public class Venta
     private EstadoVenta estado;
 
     @Embedded //Marca un campo en una clase de entidad como un objeto incrustado
-    @AttributeOverride(name = "fechaVenta", column = @Column(name = "fecha_valor"))
     private FechaVenta fecha; //OV
 
     @Embedded
@@ -100,6 +99,13 @@ public class Venta
     public void eliminarDetalleVenta(DetalleVenta detalleVenta){
         detalleVentaLista.remove(detalleVenta);
         detalleVenta.setVenta(null);
+    }
+    public void registrarVenta() {
+        this.estado = EstadoVenta.RESERVADA;
+    }
+
+    public void modificarEstado(EstadoVenta nuevoEstado) {
+        this.estado = nuevoEstado;
     }
 
 }
