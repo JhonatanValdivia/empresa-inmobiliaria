@@ -25,6 +25,8 @@
         <module>msvc-comision</module>
         <module>msvc-venta</module>
         <module>msvc-propiedades</module>
+        <module>msvc-capania</module>
+        <module>msvc-cobro</module>
 
     </modules>
     <properties>
