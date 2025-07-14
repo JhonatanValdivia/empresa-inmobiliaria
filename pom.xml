@@ -24,6 +24,7 @@
         <module>msvc-preventa</module>
         <module>msvc-comision</module>
         <module>msvc-venta</module>
+        <module>msvc-propiedades</module>
 
     </modules>
     <properties>
