@@ -1,6 +1,9 @@
 package org.academico.springcloud.msvc.cobro.models.valueObjects;
 
 import jakarta.persistence.Embeddable;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.Objects;
 
 @Embeddable
 public class FechaCobro {
@@ -14,9 +17,15 @@ public class FechaCobro {
     public FechaCobro() {}
 
     public FechaCobro(int dia, int mes, int anio, int hora, int minuto) {
-        if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 2000 || anio > 2100 ||
+        LocalDateTime now = LocalDateTime.now();
+        int currentYear = now.getYear();
+        if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 2000 || anio > currentYear + 10 ||
                 hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
-            throw new IllegalArgumentException("Fecha o hora invalida.");
+            throw new IllegalArgumentException("Fecha o hora inválida.");
+        }
+        YearMonth yearMonth = YearMonth.of(anio, mes);
+        if (dia > yearMonth.lengthOfMonth()) {
+            throw new IllegalArgumentException("Día inválido para el mes y año especificados.");
         }
         this.dia = dia;
         this.mes = mes;
@@ -25,7 +34,10 @@ public class FechaCobro {
         this.minuto = minuto;
     }
 
-    public FechaCobro(java.time.LocalDateTime fecha) {
+    public FechaCobro(LocalDateTime fecha) {
+        if (fecha == null) {
+            throw new IllegalArgumentException("La fecha no puede ser nula.");
+        }
         this.dia = fecha.getDayOfMonth();
         this.mes = fecha.getMonthValue();
         this.anio = fecha.getYear();
@@ -38,14 +50,27 @@ public class FechaCobro {
         return String.format("%02d/%02d/%d %02d:%02d", dia, mes, anio, hora, minuto);
     }
 
+    // Getters
     public int getDia() { return dia; }
     public int getMes() { return mes; }
     public int getAnio() { return anio; }
     public int getHora() { return hora; }
     public int getMinuto() { return minuto; }
-    public void setDia(int dia) { this.dia = dia; }
-    public void setMes(int mes) { this.mes = mes; }
-    public void setAnio(int anio) { this.anio = anio; }
-    public void setHora(int hora) { this.hora = hora; }
-    public void setMinuto(int minuto) { this.minuto = minuto; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FechaCobro)) return false;
+        FechaCobro that = (FechaCobro) o;
+        return dia == that.dia &&
+                mes == that.mes &&
+                anio == that.anio &&
+                hora == that.hora &&
+                minuto == that.minuto;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dia, mes, anio, hora, minuto);
+    }
 }
