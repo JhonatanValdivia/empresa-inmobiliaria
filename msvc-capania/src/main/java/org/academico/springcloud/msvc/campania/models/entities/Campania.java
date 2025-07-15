@@ -1,6 +1,7 @@
 package org.academico.springcloud.msvc.campania.models.entities;
 
 import jakarta.persistence.*;
+import org.academico.springcloud.msvc.campania.models.Propiedad;
 import org.academico.springcloud.msvc.campania.models.enums.EstadoCampania;
 import org.academico.springcloud.msvc.campania.models.enums.MedioPago;
 
@@ -33,10 +34,9 @@ public class Campania {
     @Enumerated(EnumType.STRING)
     private MedioPago medioPago;
 
-    @Column(name = "eliminada")
-    private boolean eliminada = false; // Campo para soft delete
+    @Transient // No se mapea a la base de datos, solo en memoria
+    private Propiedad propiedad;
 
-    // Constructores
     public Campania() {}
 
     // Métodos
@@ -45,7 +45,10 @@ public class Campania {
             throw new IllegalStateException("No se puede crear la campaña sin al menos un proveedor.");
         }
         this.estado = EstadoCampania.ACTIVA;
-        this.eliminada = false; // Asegurar que una nueva campaña no esté marcada como eliminada
+        // Inicializar monto con 5 si es null
+        if (this.monto == null || this.monto.compareTo(BigDecimal.valueOf(5)) < 0) {
+            this.monto = BigDecimal.valueOf(5);
+        }
     }
 
     public void aprobarMonto(BigDecimal nuevoMonto) {
@@ -54,10 +57,6 @@ public class Campania {
         } else {
             throw new IllegalArgumentException("El monto debe ser mayor que cero");
         }
-    }
-
-    public void marcarEliminada() {
-        this.eliminada = true;
     }
 
     // Getters y setters
@@ -78,6 +77,6 @@ public class Campania {
     public void setMonto(BigDecimal monto) { this.monto = monto; }
     public MedioPago getMedioPago() { return medioPago; }
     public void setMedioPago(MedioPago medioPago) { this.medioPago = medioPago; }
-    public boolean isEliminada() { return eliminada; }
-    public void setEliminada(boolean eliminada) { this.eliminada = eliminada; }
+    public Propiedad getPropiedad() { return propiedad; }
+    public void setPropiedad(Propiedad propiedad) { this.propiedad = propiedad; }
 }

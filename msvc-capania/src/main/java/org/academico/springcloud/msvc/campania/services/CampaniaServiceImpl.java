@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.campania.services;
 
+import org.academico.springcloud.msvc.campania.clients.PropiedadClientRest;
+import org.academico.springcloud.msvc.campania.models.Propiedad;
 import org.academico.springcloud.msvc.campania.models.entities.Campania;
 import org.academico.springcloud.msvc.campania.models.entities.ProveedorPublicidad;
 import org.academico.springcloud.msvc.campania.repositories.CampaniaRepository;
@@ -15,28 +17,36 @@ public class CampaniaServiceImpl implements CampaniaService {
     @Autowired
     private CampaniaRepository repository;
 
+    @Autowired
+    private PropiedadClientRest propiedadClient; // Inyectar el cliente
+
     @Override
     @Transactional(readOnly = true)
     public List<Campania> listar() {
-        return (List<Campania>) repository.findAll();
+        List<Campania> campanias = (List<Campania>) repository.findAll();
+        campanias.forEach(this::cargarPropiedad); // Cargar propiedades para todas las campañas
+        return campanias;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Campania> porId(Long id) {
-        return repository.findById(id);
+        Optional<Campania> campaniaOpt = repository.findById(id);
+        campaniaOpt.ifPresent(this::cargarPropiedad); // Cargar propiedad para la campaña específica
+        return campaniaOpt;
     }
 
     @Override
     @Transactional
     public Campania guardar(Campania campania) {
+        campania = cargarPropiedad(campania); // Cargar propiedad antes de guardar
         return repository.save(campania);
     }
 
     @Override
     @Transactional
     public void eliminar(Long id) {
-        repository.deleteById(id);
+        repository.deleteById(id); // Elimina físicamente el registro
     }
 
     @Transactional
@@ -49,14 +59,27 @@ public class CampaniaServiceImpl implements CampaniaService {
                     .findFirst()
                     .orElse(null);
             if (proveedorAEliminar != null) {
-                proveedorAEliminar.eliminarProveedor(); // Marca la intención
+                proveedorAEliminar.eliminarProveedor();
                 campania.getProveedores().remove(proveedorAEliminar);
-                repository.save(campania); // Esto desencadenará la eliminación física debido a cascade
+                repository.save(campania);
             } else {
                 throw new IllegalArgumentException("Proveedor no encontrado en la campaña");
             }
         } else {
             throw new IllegalArgumentException("Campaña no encontrada");
         }
+    }
+
+    private Campania cargarPropiedad(Campania campania) {
+        if (campania != null && campania.getIdPropiedad() != null) {
+            try {
+                Propiedad propiedad = propiedadClient.detalle(campania.getIdPropiedad());
+                campania.setPropiedad(propiedad);
+            } catch (Exception e) {
+                campania.setPropiedad(null); // Manejo de error si no se encuentra la propiedad
+                System.err.println("Error al cargar propiedad: " + e.getMessage()); // Logging básico
+            }
+        }
+        return campania;
     }
 }

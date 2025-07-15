@@ -1,13 +1,16 @@
 package org.academico.springcloud.msvc.campania.controllers;
 
+import feign.FeignException;
 import org.academico.springcloud.msvc.campania.models.entities.Campania;
 import org.academico.springcloud.msvc.campania.models.entities.ProveedorPublicidad;
 import org.academico.springcloud.msvc.campania.services.CampaniaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,11 +35,16 @@ public class CampaniaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> porId(@PathVariable Long id) {
-        Optional<Campania> campaniaOpt = service.porId(id);
-        if (campaniaOpt.isPresent()) {
-            return ResponseEntity.ok(campaniaOpt.get());
-        } else {
-            return ResponseEntity.status(404).body("La campaña con ID " + id + " no existe.");
+        try {
+            Optional<Campania> campaniaOpt = service.porId(id);
+            if (campaniaOpt.isPresent()) {
+                return ResponseEntity.ok(campaniaOpt.get());
+            } else {
+                return ResponseEntity.status(404).body("La campaña con ID " + id + " no existe.");
+            }
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("Mensaje", "Error al conectar con msvc-propiedades: " + e.getMessage()));
         }
     }
 
@@ -66,6 +74,11 @@ public class CampaniaController {
             }
         }
 
+        // Validar que el monto, si se proporciona, sea al menos 5
+        if (campania.getMonto() != null && campania.getMonto().compareTo(BigDecimal.valueOf(5)) < 0) {
+            return ResponseEntity.badRequest().body("El monto debe ser al menos 5.");
+        }
+
         try {
             campania.crearCampania();
             Campania nuevaCampania = service.guardar(campania);
@@ -76,25 +89,17 @@ public class CampaniaController {
     }
 
     @PutMapping("/{id}/aprobar-monto")
-    public ResponseEntity<?> aprobarMonto(@PathVariable Long id, @RequestBody MontoRequerido request) {
+    public ResponseEntity<?> aprobarMonto(@PathVariable Long id, @RequestBody Map<String, BigDecimal> request) {
         Optional<Campania> campaniaOpt = service.porId(id);
-
         if (campaniaOpt.isEmpty()) {
-            return ResponseEntity
-                    .status(404)
-                    .body("La campaña con ID " + id + " no existe.");
+            return ResponseEntity.status(404).body("La campaña con ID " + id + " no existe.");
         }
-
-        Campania campania = campaniaOpt.get();
-        BigDecimal nuevoMonto = request.getMonto();
-
         try {
+            BigDecimal nuevoMonto = request.get("monto");
             if (nuevoMonto == null || nuevoMonto.compareTo(BigDecimal.ZERO) <= 0) {
-                return ResponseEntity
-                        .badRequest()
-                        .body("El monto debe ser mayor que cero.");
+                return ResponseEntity.badRequest().body("El monto debe ser mayor que cero.");
             }
-
+            Campania campania = campaniaOpt.get();
             campania.aprobarMonto(nuevoMonto);
             return ResponseEntity.ok(service.guardar(campania));
         } catch (IllegalArgumentException e) {
@@ -109,7 +114,6 @@ public class CampaniaController {
         if (campaniaOpt.isEmpty()) {
             return ResponseEntity.status(404).body("La campaña con ID " + id + " no existe.");
         }
-
         service.eliminar(id);
         return ResponseEntity.ok("Campaña eliminada exitosamente.");
     }
