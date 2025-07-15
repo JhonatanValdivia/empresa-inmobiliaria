@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.venta.models.valueObjects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
 
 import java.time.LocalDate;
@@ -8,14 +10,17 @@ import java.util.Objects;
 @Embeddable // indica que la clase se puede integrar en una entidad y no tiene su propia identidad independiente.
 public class FechaVenta
 {
-    private int dia;
+    private  int dia;
     private int mes;
     private int año;
 
-    public FechaVenta() {
+    protected FechaVenta() {
     }
+    @JsonCreator
+    public FechaVenta(@JsonProperty("dia") int dia,
+                      @JsonProperty("mes") int mes,
+                      @JsonProperty("año") int año) {
 
-    public FechaVenta(int dia, int mes, int año) {
         if (mes < 1 || mes > 12) {
             throw new IllegalArgumentException("Mes inválido: debe estar entre 1 y 12");
         }
@@ -26,14 +31,12 @@ public class FechaVenta
             throw new IllegalArgumentException("Día inválido: debe estar entre 1 y 31");
         }
 
-        // detecta si el día es válido para ese mes/año
         try {
             LocalDate.of(año, mes, dia);
         } catch (Exception e) {
             throw new IllegalArgumentException("Fecha inválida: combinación día-mes-año incorrecta");
         }
 
-        // no permitir fechas pasadas
         if (LocalDate.of(año, mes, dia).isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Fecha inválida: no puede ser en el pasado");
         }
@@ -70,6 +73,5 @@ public class FechaVenta
 
     @Override
     public int hashCode() {
-        return Objects.hash(dia, mes, año);
-    }
+        return Objects.hash(dia, mes,año);}
 }

@@ -77,4 +77,5 @@ public class DetalleVenta {
     public void marcarComoPagado() {
         this.estadoDetalle = EstadoDetalle.PAGADO;
     }
+
 }

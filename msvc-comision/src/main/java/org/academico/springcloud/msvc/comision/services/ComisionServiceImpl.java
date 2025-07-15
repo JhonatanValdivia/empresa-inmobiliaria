@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,11 +45,12 @@ public class ComisionServiceImpl implements ComisionService {
     @Override
     @Transactional
     public Comision guardar(Comision comision) {
-        if (comision.getMontoComision() == null) {
-            Venta venta = ventaClientRest.detalle(comision.getVentaId());
-            BigDecimal monto = calcularComision(venta.getPrecioVenta().getPrecioVenta(), comision.getTipoComision());
-            comision.setMontoComision(new MontoComision(monto, venta.getPrecioVenta().getMoneda()));
+        Venta venta = ventaClientRest.detalle(comision.getVentaId());
+        if (venta == null || venta.getPrecioVenta() == null) {
+            throw new IllegalArgumentException("La venta o el precio de venta no están disponibles.");
         }
+        BigDecimal montoComisionCalculado = calcularComision(venta.getPrecioVenta().getPrecioVenta(), comision.getTipoComision());
+        comision.setMontoComision(new MontoComision(montoComisionCalculado, venta.getPrecioVenta().getMoneda()));
         return comisionRepository.save(comision);
     }
 
@@ -85,9 +87,8 @@ public class ComisionServiceImpl implements ComisionService {
     @Override
     @Transactional
     public BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision) {
-        return tipoComision == TipoComision.PORCENTAJE
-                ? montoBase.multiply(new BigDecimal("0.10"))
-                : new BigDecimal("400.00");
+        BigDecimal resultado = tipoComision.calcular(montoBase);
+        return resultado.setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
@@ -103,15 +104,6 @@ public class ComisionServiceImpl implements ComisionService {
                 .orElseThrow(() -> new RuntimeException("Comisión no encontrada"));
         comision.actualizarEstado(nuevoEstado);
         comisionRepository.save(comision);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BigDecimal totalComisionesPorVenta(Long ventaId) {
-        List<Comision> comisiones = comisionRepository.findByVentaId(ventaId);
-        return comisiones.stream()
-                .map(c -> c.getMontoComision().getMontoComision())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
