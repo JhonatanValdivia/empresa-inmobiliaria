@@ -70,14 +70,19 @@ public class CampaniaServiceImpl implements CampaniaService {
         }
     }
 
+    @Override
+    public PropiedadClientRest getPropiedadClient() {
+        return propiedadClient;
+    }
+
     private Campania cargarPropiedad(Campania campania) {
         if (campania != null && campania.getIdPropiedad() != null) {
             try {
                 Propiedad propiedad = propiedadClient.detalle(campania.getIdPropiedad());
                 campania.setPropiedad(propiedad);
             } catch (Exception e) {
-                campania.setPropiedad(null); // Manejo de error si no se encuentra la propiedad
-                System.err.println("Error al cargar propiedad: " + e.getMessage()); // Logging básico
+                campania.setPropiedad(null);
+                System.err.println("Error al cargar propiedad: " + e.getMessage());
             }
         }
         return campania;
