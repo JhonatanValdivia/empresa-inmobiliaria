@@ -7,14 +7,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "msvc-norma",url="localhost:8070/api/norma")
+@FeignClient(name = "msvc-norma", url="http://localhost:8070")
 public interface InmobiliariaClientRest {
 
-    @GetMapping("/{Id}")
-    Norma detalle(@PathVariable Long id);
-    @PostMapping
+    @GetMapping("/api/norma/{id}")
+    Norma detalle(@PathVariable("id") Long id);
+
+    @PostMapping("/api/norma")
     Norma crear(@RequestBody Norma norma);
-
-
-
 }

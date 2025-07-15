@@ -175,7 +175,7 @@ public class PropiedadInmobiliariaController {
     public ResponseEntity<?> asignarNorma(@RequestBody Norma norma, @PathVariable Long propiedadId) {
         Optional<Norma> normaOptional;
         try {
-            normaOptional = service.crearNorma(norma, propiedadId);
+            normaOptional = service.asignarNorma(norma, propiedadId);
         } catch (FeignException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("Mensaje", "No se pudo asignar la norma, error en la comunicación: " + e.getMessage()));
