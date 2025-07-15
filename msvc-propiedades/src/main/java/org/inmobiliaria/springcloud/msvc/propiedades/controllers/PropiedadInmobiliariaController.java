@@ -1,5 +1,7 @@
 package org.inmobiliaria.springcloud.msvc.propiedades.controllers;
 
+import feign.FeignException;
+import org.inmobiliaria.springcloud.msvc.propiedades.models.Norma;
 import org.inmobiliaria.springcloud.msvc.propiedades.models.entitys.*;
 import org.inmobiliaria.springcloud.msvc.propiedades.services.PropiedadInmobiliariaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -163,5 +166,73 @@ public class PropiedadInmobiliariaController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+
+    //metodos con agregao norma
+
+    @PutMapping("/asignar-norma/{propiedadId}")
+    public ResponseEntity<?> asignarNorma(@RequestBody Norma norma, @PathVariable Long propiedadId) {
+        Optional<Norma> normaOptional;
+        try {
+            normaOptional = service.crearNorma(norma, propiedadId);
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("Mensaje", "No se pudo asignar la norma, error en la comunicación: " + e.getMessage()));
+        }
+
+        if (normaOptional.isPresent())
+            return ResponseEntity.status(HttpStatus.CREATED).body(normaOptional.get());
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/eliminar-norma/{propiedadId}")
+    public ResponseEntity<?> eliminarNorma(@RequestBody Norma norma, @PathVariable Long propiedadId) {
+        Optional<Norma> normaOptional;
+        try {
+            normaOptional = service.eliminarNorma(norma, propiedadId);
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("Mensaje", "No se pudo eliminar la norma, error en la comunicación: " + e.getMessage()));
+        }
+
+        if (normaOptional.isPresent())
+            return ResponseEntity.status(HttpStatus.OK).body(normaOptional.get());
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/crear-norma/{propiedadId}")
+    public ResponseEntity<?> crearNorma(@RequestBody Norma norma, @PathVariable Long propiedadId) {
+        Optional<Norma> normaOptional;
+        try {
+            normaOptional = service.crearNorma(norma, propiedadId);
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("Mensaje", "No se pudo crear la norma, error en la comunicación: " + e.getMessage()));
+        }
+
+        if (normaOptional.isPresent())
+            return ResponseEntity.status(HttpStatus.CREATED).body(normaOptional.get());
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/listar-normas")
+    public ResponseEntity<?> listarNormas() {
+        List<PropiedadInmobiliaria> propiedades;
+        try {
+            propiedades = service.listarNormas();
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("Mensaje", "Error al listar normas, error en la comunicación: " + e.getMessage()));
+        }
+
+        if (!propiedades.isEmpty()) {
+            return ResponseEntity.ok(propiedades);
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }

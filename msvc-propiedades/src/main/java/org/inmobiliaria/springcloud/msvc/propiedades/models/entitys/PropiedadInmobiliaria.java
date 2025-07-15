@@ -2,6 +2,7 @@ package org.inmobiliaria.springcloud.msvc.propiedades.models.entitys;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import org.inmobiliaria.springcloud.msvc.propiedades.models.Norma;
 import org.inmobiliaria.springcloud.msvc.propiedades.models.enums.EstadoPropiedad;
 import org.inmobiliaria.springcloud.msvc.propiedades.models.enums.TipoPropiedad;
 import org.inmobiliaria.springcloud.msvc.propiedades.models.valueObjects.Precio;
@@ -71,6 +72,45 @@ public class PropiedadInmobiliaria {
     @JoinColumn(name = "id_expediente")
     @JsonManagedReference
     private Expediente expediente;
+
+    //relacion con otros agregados
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "norma_id")
+    private List<PropiedadInmobiliariaNorma> propiedadNormas;
+
+    @Transient
+    private List<Norma>normas;
+
+    public PropiedadInmobiliaria() {
+
+        propiedadNormas = new ArrayList<>();
+    }
+
+    //
+    public void addPropiedadNorma(PropiedadInmobiliariaNorma propiedadNorma){
+        propiedadNormas.add(propiedadNorma);
+    }
+    public void removerPropiedadNorma(PropiedadInmobiliariaNorma propiedadNorma){
+        propiedadNormas.remove(propiedadNorma);
+    }
+
+    public List<PropiedadInmobiliariaNorma> getPropiedadNormas() {
+        return propiedadNormas;
+    }
+
+    public void setPropiedadNormas(List<PropiedadInmobiliariaNorma> propiedadNormas) {
+        this.propiedadNormas = propiedadNormas;
+    }
+
+    public List<Norma> getNormas() {
+        return normas;
+    }
+
+    public void setNormas(List<Norma> normas) {
+        this.normas = normas;
+    }
+
+//
 
 
     public TipoPropiedad getTipoPropiedad() {
@@ -210,5 +250,5 @@ public class PropiedadInmobiliaria {
 
      */
 
-    protected PropiedadInmobiliaria() {}
+
 }

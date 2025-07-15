@@ -1,15 +1,20 @@
 package org.inmobiliaria.springcloud.msvc.propiedades.services;
 
+import org.inmobiliaria.springcloud.msvc.propiedades.clients.InmobiliariaClientRest;
+import org.inmobiliaria.springcloud.msvc.propiedades.models.Norma;
 import org.inmobiliaria.springcloud.msvc.propiedades.models.entitys.*;
 import org.inmobiliaria.springcloud.msvc.propiedades.repositories.PropiedadInmobiliariaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 @Service
 public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaService {
+
+
 
     @Autowired
     private  PropiedadInmobiliariaRepository repo;
@@ -121,5 +126,83 @@ public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaSe
                     }
                     return p;
                 });
+    }
+
+    @Autowired
+    private InmobiliariaClientRest inmobiliariaClientRest;
+
+    @Override
+    public Optional<Norma> asignarNorma(Norma norma, Long propiedadId) {
+        Optional<PropiedadInmobiliaria> op = repo.findById(propiedadId);
+
+        if(op.isPresent()){
+            Norma normaMsvc = inmobiliariaClientRest.detalle(norma.getIdNorma());
+            PropiedadInmobiliaria propiedadInmobiliaria = op.get();
+            PropiedadInmobiliariaNorma propiedadInmobiliariaNorma = new PropiedadInmobiliariaNorma();
+            propiedadInmobiliariaNorma.setNormaId(normaMsvc.getIdNorma());
+
+            propiedadInmobiliaria.addPropiedadNorma(propiedadInmobiliariaNorma);
+            repo.save(propiedadInmobiliaria);
+            return Optional.of(normaMsvc);
+
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public Optional<Norma> eliminarNorma(Norma norma, Long propiedadId) {
+        Optional<PropiedadInmobiliaria> op = repo.findById(propiedadId);
+
+        if(op.isPresent()){
+            Norma normaMsvc = inmobiliariaClientRest.detalle(norma.getIdNorma());
+            PropiedadInmobiliaria propiedadInmobiliaria = op.get();
+            PropiedadInmobiliariaNorma propiedadInmobiliariaNorma = new PropiedadInmobiliariaNorma();
+            propiedadInmobiliariaNorma.setNormaId(normaMsvc.getIdNorma());
+
+            propiedadInmobiliaria.removerPropiedadNorma(propiedadInmobiliariaNorma);
+            repo.save(propiedadInmobiliaria);
+            return Optional.of(normaMsvc);
+
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public Optional<Norma> crearNorma(Norma norma, Long propiedadId) {
+        Optional<PropiedadInmobiliaria> op = repo.findById(propiedadId);
+
+        if(op.isPresent()){
+            Norma normaMsvc = inmobiliariaClientRest.crear(norma);
+            PropiedadInmobiliaria propiedadInmobiliaria = op.get();
+            PropiedadInmobiliariaNorma propiedadInmobiliariaNorma = new PropiedadInmobiliariaNorma();
+            propiedadInmobiliariaNorma.setNormaId(normaMsvc.getIdNorma());
+
+            propiedadInmobiliaria.addPropiedadNorma(propiedadInmobiliariaNorma);
+            repo.save(propiedadInmobiliaria);
+            return Optional.of(normaMsvc);
+
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public List<PropiedadInmobiliaria> listarNormas() {
+        List<PropiedadInmobiliaria> propiedadInmobiliarias  =(List<PropiedadInmobiliaria>) repo.findAll();
+        for(PropiedadInmobiliaria propiedad: propiedadInmobiliarias){
+            List<Norma> normas = new ArrayList<>();
+            for(PropiedadInmobiliariaNorma propiedadNormas: propiedad.getPropiedadNormas()){
+                Norma norma =  inmobiliariaClientRest.detalle(propiedadNormas.getNormaId());
+                normas.add(norma);
+            }
+            propiedad.setNormas(normas);
+        }
+
+        return propiedadInmobiliarias;
     }
 }

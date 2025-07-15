@@ -1,5 +1,6 @@
 package org.inmobiliaria.springcloud.msvc.propiedades.services;
 
+import org.inmobiliaria.springcloud.msvc.propiedades.models.Norma;
 import org.inmobiliaria.springcloud.msvc.propiedades.models.entitys.*;
 
 import java.util.List;
@@ -27,4 +28,14 @@ public interface PropiedadInmobiliariaService {
     // Planos via expediente
     Optional<PropiedadInmobiliaria> agregarPlano(Long propiedadId, Plano plano);
     Optional<PropiedadInmobiliaria> removerPlano(Long propiedadId, Long planoId);
+
+
+
+    //relacion con el agregado nomrma
+    Optional<Norma> asignarNorma(Norma norma, Long propiedadId);
+    Optional<Norma> eliminarNorma(Norma norma, Long propiedadId);
+    Optional<Norma> crearNorma(Norma norma, Long propiedadId);
+
+    List<PropiedadInmobiliaria> listarNormas();
+
 }
