@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.comision.models.valueObjects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
 
 import java.time.LocalDate;
@@ -8,13 +10,16 @@ import java.util.Objects;
 @Embeddable
 public class FechaPagoComision {
     private int dia;
-    private int mes;
-    private int año;
+    private  int mes;
+    private  int año;
 
-    public FechaPagoComision() {
-    }
+    protected  FechaPagoComision(){}
 
-    public FechaPagoComision(int dia, int mes, int año) {
+    @JsonCreator
+    public FechaPagoComision(@JsonProperty("dia") int dia,
+                             @JsonProperty("mes") int mes,
+                             @JsonProperty("año") int año) {
+
         if (mes < 1 || mes > 12) {
             throw new IllegalArgumentException("Mes inválido: debe estar entre 1 y 12");
         }
@@ -25,14 +30,12 @@ public class FechaPagoComision {
             throw new IllegalArgumentException("Día inválido: debe estar entre 1 y 31");
         }
 
-        // detecta si el día es válido para ese mes/año
         try {
             LocalDate.of(año, mes, dia);
         } catch (Exception e) {
             throw new IllegalArgumentException("Fecha inválida: combinación día-mes-año incorrecta");
         }
 
-        // no permitir fechas pasadas
         if (LocalDate.of(año, mes, dia).isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Fecha inválida: no puede ser en el pasado");
         }

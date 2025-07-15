@@ -22,15 +22,8 @@ public interface ComisionService
 
     //métodos remotos
     Optional<Venta> obtenerVenta(Long ventaId);
-
-    // Recalcular comisión si la venta cambió
     BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision);
-
     List<Comision> listarPorVenta(Long ventaId);
-
     void cambiarEstadoComision(Long comisionId, EstadoComision nuevoEstado);
-
-    BigDecimal totalComisionesPorVenta(Long ventaId);
-
     List<Comision> listarActivas();
 }

@@ -30,10 +30,7 @@ public class Comision
     @Embedded
     private FechaPagoComision fechaPagoComision; //OV
 
-    //IdVenta
-    //IdUsuario(Agente)
-
-    @Column(name = "venta_id")//
+    @Column(name = "venta_id", unique = true)//
     private Long ventaId;
 
     @Transient
@@ -90,19 +87,9 @@ public class Comision
         return ventaId != null && montoComision != null && tipoComision != null;
     }
 
-    public void calcularComision(BigDecimal montoBase) {
-        BigDecimal calculado = tipoComision == TipoComision.PORCENTAJE
-                ? montoBase.multiply(new BigDecimal("0.10"))
-                : new BigDecimal("100.00");
-        this.montoComision = new MontoComision(calculado, this.montoComision.getMoneda());
-    }
 
     public void pagarComision() {
         this.estadoComision = EstadoComision.PAGADA;
-    }
-
-    public void anularComision() {
-        this.estadoComision = EstadoComision.ANULADA;
     }
 
     public void actualizarEstado(EstadoComision nuevoEstado) {

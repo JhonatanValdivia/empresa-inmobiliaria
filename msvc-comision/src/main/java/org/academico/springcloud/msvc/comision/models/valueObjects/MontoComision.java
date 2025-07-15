@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.comision.models.valueObjects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
 
 import java.math.BigDecimal;
@@ -10,14 +12,17 @@ public class MontoComision {
     private BigDecimal montoComision; //representa decimales exactos y permite operaciones +,-,*,/ sin perder precision
     private String moneda;
 
-    public MontoComision(){}
+    protected  MontoComision(){}
 
-    public MontoComision(BigDecimal montoComision, String moneda) {
-        if(montoComision==null || montoComision.compareTo(BigDecimal.ZERO)<=0){
-            throw new IllegalArgumentException("El valor debe ser mayor que cero");
+    @JsonCreator
+    public MontoComision(@JsonProperty("montoComision") BigDecimal montoComision,
+                         @JsonProperty("moneda") String moneda) {
+
+        if (montoComision == null || montoComision.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero");
         }
-        if(moneda==null ||moneda.isBlank()){
-            throw new IllegalArgumentException("El valor debe ser mayor que cero");
+        if (moneda == null || moneda.isBlank()) {
+            throw new IllegalArgumentException("La moneda no puede ser vacía");
         }
 
         this.montoComision = montoComision;
