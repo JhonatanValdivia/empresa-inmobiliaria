@@ -1,6 +1,7 @@
 package org.academico.springcloud.msvc.venta.models.entities;
 
 import jakarta.persistence.*;
+import org.academico.springcloud.msvc.venta.models.dtos.PreventaDTO;
 import org.academico.springcloud.msvc.venta.models.enums.EstadoVenta;
 import org.academico.springcloud.msvc.venta.models.enums.TipoVenta;
 import org.academico.springcloud.msvc.venta.models.valueObjects.FechaVenta;
@@ -29,6 +30,13 @@ public class Venta
     @Embedded
     @AttributeOverride(name = "precioVenta", column = @Column(name = "precio_valor"))
     private PrecioVenta precioVenta; //OV
+
+    //Relación con Preventa (REFERENCIA POR ID)
+    @Column(unique = true) // Asegura unicidad: una Venta solo se asigna a una Preventa
+    private Long preventaId;
+
+    @Transient // No se persiste en la base de datos, se carga en tiempo de ejecución
+    private PreventaDTO preventaDetalles; // Campo para componer los detalles de Preventa
 
     //mappedBy: hace referencia a que la relación está mapeada en el lado de DetalleVenta por el atributo llamado venta
     @OneToMany(mappedBy = "venta",cascade = CascadeType.ALL, orphanRemoval = true)//relacion 1:M---> bidireccional
@@ -89,6 +97,23 @@ public class Venta
 
     public void setDetalleVentaLista(List<DetalleVenta> detalleVentaLista) {
         this.detalleVentaLista = detalleVentaLista;
+    }
+
+
+    public Long getPreventaId() {
+        return preventaId;
+    }
+
+    public void setPreventaId(Long preventaId) {
+        this.preventaId = preventaId;
+    }
+
+    public PreventaDTO getPreventaDetalles() {
+        return preventaDetalles;
+    }
+
+    public void setPreventaDetalles(PreventaDTO preventaDetalles) {
+        this.preventaDetalles = preventaDetalles;
     }
 
 
