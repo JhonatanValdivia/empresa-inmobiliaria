@@ -4,42 +4,38 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 import java.time.LocalDate;
+import java.util.Objects;
+
 
 @Embeddable
 public class Fecha {
 
-    private int dia;
-    private int mes;
-    private int año;
+    private Integer dia;
+    private Integer mes;
+    private Integer anio;
 
     protected Fecha() {}
 
     public Fecha(Integer dia, Integer mes, Integer anio) {
         if (mes < 1 || mes > 12) {
-            throw new IllegalArgumentException("Mes inválido: debe estar entre 1 y 12");
+            throw new IllegalArgumentException("Mes inválido");
         }
-        if (año < 1900) {
-            throw new IllegalArgumentException("Año inválido: debe ser mayor a 1900");
+        if (anio < 1900) {
+            throw new IllegalArgumentException("Año debe ser mayor a 1900");
         }
         if (dia < 1 || dia > 31) {
-            throw new IllegalArgumentException("Día inválido: debe estar entre 1 y 31");
+            throw new IllegalArgumentException("Día inválido");
         }
 
-        // detecta si el día es válido para ese mes/año
         try {
-            LocalDate.of(año, mes, dia);
+            LocalDate.of(anio, mes, dia); // Verifica la combinación fecha
         } catch (Exception e) {
-            throw new IllegalArgumentException("Fecha inválida: combinación día-mes-año incorrecta");
-        }
-
-        // no permitir fechas pasadas
-        if (LocalDate.of(año, mes, dia).isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Fecha inválida: no puede ser en el pasado");
+            throw new IllegalArgumentException("Fecha inválida");
         }
 
         this.dia = dia;
         this.mes = mes;
-        this.año = año;
+        this.anio = anio;
     }
 
     public Integer getDia() {
@@ -50,11 +46,25 @@ public class Fecha {
         return mes;
     }
 
-    public Integer getAño() {
-        return año;
+    public Integer getAnio() {
+        return anio;
     }
 
-    public void setAnio(Integer anio) {
-        this.año = anio;
+    @Override
+    public String toString() {
+        return dia + "/" + mes + "/" + anio;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Fecha)) return false;
+        Fecha fecha = (Fecha) obj;
+        return dia.equals(fecha.dia) && mes.equals(fecha.mes) && anio.equals(fecha.anio);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dia, mes, anio);
     }
 }
