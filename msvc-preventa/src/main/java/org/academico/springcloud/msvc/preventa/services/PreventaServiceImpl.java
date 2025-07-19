@@ -48,149 +48,82 @@ public class PreventaServiceImpl implements PreventaService {
     }
 
     // Implementación de métodos de negocio del agregado Preventa
-    @Override
-    @Transactional
-    public Optional<Preventa> programarVisitaEnPreventa(Long preventaId, LocalDate fechaVisita) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            preventa.programarVisita(fechaVisita);
-            return Optional.of(repository.save(preventa));
-        }
-        return Optional.empty();
-    }
+
 
     @Override
     @Transactional
-    public Optional<Preventa> registrarContratoEnPreventa(Long preventaId, TipoContrato tipoContrato, LocalDate fechaFirma) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            preventa.registrarContrato(tipoContrato, fechaFirma);
-            return Optional.of(repository.save(preventa));
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    @Transactional
-    public Optional<Preventa> registrarPagoEnPreventa(Long preventaId, BigDecimal monto, LocalDate fecha, MetodoPago metodo) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            preventa.registrarPago(monto, fecha, metodo);
-            return Optional.of(repository.save(preventa));
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<BigDecimal> calcularComisionPreventa(Long preventaId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        return opPreventa.map(Preventa::calcularComision);
-    }
-
-    @Override
-    @Transactional
-    public Optional<Preventa> marcarPreventaComoFinalizada(Long preventaId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            try {
-                preventa.marcarComoFinalizado();
-                return Optional.of(repository.save(preventa));
-            } catch (IllegalStateException e) {
-                // Manejar o relanzar la excepción para que el controlador la procese
-                throw e;
-            }
-        }
-        return Optional.empty();
+    public Optional<Preventa> aprobarPreventa(Long preventaId) {
+        return repository.findById(preventaId).map(preventa -> {
+            preventa.aprobarPreventa(); // La lógica está en la entidad
+            return repository.save(preventa);
+        });
     }
 
     // Implementación de CRUD Anidado para ContratoVenta
+
+
+    @Override
+    @Transactional
+    public Optional<ContratoVenta> agregarContratoVenta(Long preventaId, ContratoVenta contrato) {
+        return repository.findById(preventaId).map(preventa -> {
+            if (preventa.getContratoVenta() != null) {
+                throw new IllegalStateException("La Preventa " + preventaId + " ya tiene un contrato asociado.");
+            }
+            contrato.setId(null); // Asegura que sea una inserción
+            contrato.setPreventa(preventa);
+            preventa.setContratoVenta(contrato);
+            repository.save(preventa);
+            return preventa.getContratoVenta();
+        });
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public Optional<List<ContratoVenta>> listarContratosPorPreventa(Long preventaId) {
-        return repository.findById(preventaId).map(Preventa::getContratosVenta);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<ContratoVenta> porIdContratoVenta(Long preventaId, Long contratoId) {
-        return repository.findById(preventaId)
-                .flatMap(preventa -> preventa.getContratosVenta().stream()
-                        .filter(c -> c.getId().equals(contratoId))
-                        .findFirst());
+    public Optional<ContratoVenta> obtenerContratoPorPreventa(Long preventaId) {
+        return repository.findById(preventaId).map(Preventa::getContratoVenta);
     }
 
     @Override
     @Transactional
-    public Optional<Preventa> agregarContratoVenta(Long preventaId, ContratoVenta contrato) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            // Asegurarse de que el contrato no tenga ya un ID para que JPA lo inserte
-            contrato.setId(null);
-            preventa.addContratoVenta(contrato);
-            return Optional.of(repository.save(preventa));
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    @Transactional
-    public Optional<ContratoVenta> actualizarContratoVenta(Long preventaId, Long contratoId, ContratoVenta contratoActualizado) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            Optional<ContratoVenta> opContratoDB = preventa.findContratoById(contratoId);
-            if (opContratoDB.isPresent()) {
-                ContratoVenta contratoDB = opContratoDB.get();
-                contratoDB.setTipoContrato(contratoActualizado.getTipoContrato());
-                contratoDB.setFechaFirma(contratoActualizado.getFechaFirma());
-                contratoDB.setEstado(contratoActualizado.getEstado());
-                repository.save(preventa); // Persiste el agregado raíz para guardar cambios en las entidades hijas
-                return Optional.of(contratoDB);
+    public Optional<ContratoVenta> actualizarContratoVenta(Long preventaId, ContratoVenta contratoActualizado) {
+        return repository.findById(preventaId).map(preventa -> {
+            ContratoVenta contratoDB = preventa.getContratoVenta();
+            if (contratoDB == null) {
+                throw new IllegalStateException("La Preventa " + preventaId + " no tiene un contrato para actualizar.");
             }
-        }
-        return Optional.empty();
+            contratoDB.setTipoContrato(contratoActualizado.getTipoContrato());
+            contratoDB.setFechaFirma(contratoActualizado.getFechaFirma());
+            contratoDB.setEstado(contratoActualizado.getEstado());
+            repository.save(preventa);
+            return contratoDB;
+        });
     }
 
     @Override
     @Transactional
-    public Optional<Preventa> eliminarContratoVenta(Long preventaId, Long contratoId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            Optional<ContratoVenta> opContrato = preventa.findContratoById(contratoId);
-            if (opContrato.isPresent()) {
-                preventa.removeContratoVenta(opContrato.get());
-                return Optional.of(repository.save(preventa));
+    public Optional<Preventa> eliminarContratoVenta(Long preventaId) {
+        return repository.findById(preventaId).map(preventa -> {
+            if (preventa.getContratoVenta() == null) {
+                throw new IllegalStateException("La Preventa " + preventaId + " no tiene un contrato para eliminar.");
             }
-        }
-        return Optional.empty();
+            // orphanRemoval=true se encargará de borrar el registro del contrato
+            preventa.setContratoVenta(null);
+            return repository.save(preventa);
+        });
     }
 
     @Override
     @Transactional
-    public Optional<ContratoVenta> anularContratoPreventa(Long preventaId, Long contratoId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            Optional<ContratoVenta> opContrato = preventa.findContratoById(contratoId);
-            if (opContrato.isPresent()) {
-                ContratoVenta contrato = opContrato.get();
-                try {
-                    contrato.anularContrato();
-                    repository.save(preventa);
-                    return Optional.of(contrato);
-                } catch (IllegalStateException e) {
-                    throw e; // Relanzar para manejar en el controlador
-                }
+    public Optional<ContratoVenta> anularContratoPreventa(Long preventaId) {
+        return repository.findById(preventaId).map(preventa -> {
+            ContratoVenta contrato = preventa.getContratoVenta();
+            if (contrato == null) {
+                throw new IllegalStateException("No hay contrato para anular.");
             }
-        }
-        return Optional.empty();
+            contrato.anularContrato();
+            repository.save(preventa);
+            return contrato;
+        });
     }
 
     // Implementación de CRUD Anidado para PropuestaPago
@@ -244,21 +177,6 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Override
     @Transactional
-    public Optional<Preventa> eliminarPropuestaPago(Long preventaId, Long propuestaId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            Optional<PropuestaPago> opPropuesta = preventa.findPropuestaPagoById(propuestaId);
-            if (opPropuesta.isPresent()) {
-                preventa.removePropuestaPago(opPropuesta.get());
-                return Optional.of(repository.save(preventa));
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    @Transactional
     public Optional<PropuestaPago> aceptarPropuestaPagoPreventa(Long preventaId, Long propuestaId) {
         Optional<Preventa> opPreventa = repository.findById(preventaId);
         if (opPreventa.isPresent()) {
@@ -276,20 +194,6 @@ public class PreventaServiceImpl implements PreventaService {
 
 
     // Implementación de CRUD Anidado para VisitaProgramada
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<List<VisitaProgramada>> listarVisitasProgramadasPorPreventa(Long preventaId) {
-        return repository.findById(preventaId).map(Preventa::getVisitasProgramadas);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<VisitaProgramada> porIdVisitaProgramada(Long preventaId, Long visitaId) {
-        return repository.findById(preventaId)
-                .flatMap(preventa -> preventa.getVisitasProgramadas().stream()
-                        .filter(v -> v.getId().equals(visitaId))
-                        .findFirst());
-    }
 
     @Override
     @Transactional
@@ -302,6 +206,12 @@ public class PreventaServiceImpl implements PreventaService {
             return Optional.of(repository.save(preventa));
         }
         return Optional.empty();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<List<VisitaProgramada>> listarVisitasProgramadasPorPreventa(Long preventaId) {
+        return repository.findById(preventaId).map(Preventa::getVisitasProgramadas);
     }
 
     @Override
@@ -324,22 +234,7 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Override
     @Transactional
-    public Optional<Preventa> eliminarVisitaProgramada(Long preventaId, Long visitaId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            Optional<VisitaProgramada> opVisita = preventa.findVisitaProgramadaById(visitaId);
-            if (opVisita.isPresent()) {
-                preventa.removeVisitaProgramada(opVisita.get());
-                return Optional.of(repository.save(preventa));
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    @Transactional
-    public Optional<VisitaProgramada> reprogramarVisitaPreventa(Long preventaId, Long visitaId, LocalDate nuevaFecha) {
+    public Optional<VisitaProgramada> reprogramarVisitaPreventa(Long preventaId, Long visitaId, LocalDate fecha) {
         Optional<Preventa> opPreventa = repository.findById(preventaId);
         if (opPreventa.isPresent()) {
             Preventa preventa = opPreventa.get();
@@ -347,7 +242,7 @@ public class PreventaServiceImpl implements PreventaService {
             if (opVisita.isPresent()) {
                 VisitaProgramada visita = opVisita.get();
                 try {
-                    visita.reprogramarVisita(nuevaFecha);
+                    visita.reprogramarVisita(fecha);
                     repository.save(preventa);
                     return Optional.of(visita);
                 } catch (IllegalStateException e) {
@@ -360,14 +255,14 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Override
     @Transactional
-    public Optional<VisitaProgramada> actualizarEstadoVisitaPreventa(Long preventaId, Long visitaId, EstadoVisita nuevoEstado) {
+    public Optional<VisitaProgramada> actualizarEstadoVisitaPreventa(Long preventaId, Long visitaId, EstadoVisita estadoVisita) {
         Optional<Preventa> opPreventa = repository.findById(preventaId);
         if (opPreventa.isPresent()) {
             Preventa preventa = opPreventa.get();
             Optional<VisitaProgramada> opVisita = preventa.findVisitaProgramadaById(visitaId);
             if (opVisita.isPresent()) {
                 VisitaProgramada visita = opVisita.get();
-                visita.actualizarEstado(nuevoEstado);
+                visita.actualizarEstado(estadoVisita);
                 repository.save(preventa);
                 return Optional.of(visita);
             }

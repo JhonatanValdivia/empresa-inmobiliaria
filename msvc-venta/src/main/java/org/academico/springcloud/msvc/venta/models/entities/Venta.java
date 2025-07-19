@@ -1,7 +1,7 @@
 package org.academico.springcloud.msvc.venta.models.entities;
 
 import jakarta.persistence.*;
-import org.academico.springcloud.msvc.venta.models.dtos.PreventaDTO;
+import org.academico.springcloud.msvc.venta.models.Preventa;
 import org.academico.springcloud.msvc.venta.models.enums.EstadoVenta;
 import org.academico.springcloud.msvc.venta.models.enums.TipoVenta;
 import org.academico.springcloud.msvc.venta.models.valueObjects.FechaVenta;
@@ -31,13 +31,13 @@ public class Venta
     @AttributeOverride(name = "precioVenta", column = @Column(name = "precio_valor"))
     private PrecioVenta precioVenta; //OV
 
-    //Relación con Preventa (REFERENCIA POR ID)
-    @Column(unique = true) // Asegura unicidad: una Venta solo se asigna a una Preventa
+    //AÑADIDO: Este campo es para almacenar el ID de la Preventa asociada a esta Venta.
+    @Column(unique = true)
     private Long preventaId;
+    @Transient
+    private Preventa DetallePreventa; //Este campo es para los datos completos de Preventa obtenidos vía API.
 
-    @Transient // No se persiste en la base de datos, se carga en tiempo de ejecución
-    private PreventaDTO preventaDetalles; // Campo para componer los detalles de Preventa
-
+    //AÑADIDO: Relación con DetalleVenta
     //mappedBy: hace referencia a que la relación está mapeada en el lado de DetalleVenta por el atributo llamado venta
     @OneToMany(mappedBy = "venta",cascade = CascadeType.ALL, orphanRemoval = true)//relacion 1:M---> bidireccional
     private List<DetalleVenta> detalleVentaLista; //representa la lista de todos los DetalleVenta asociados a una Venta específica
@@ -54,67 +54,41 @@ public class Venta
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public TipoVenta getTipoVenta() {
         return tipoVenta;
     }
-
     public void setTipoVenta(TipoVenta tipoVenta) {
         this.tipoVenta = tipoVenta;
     }
-
     public EstadoVenta getEstado() {
         return estado;
     }
-
     public void setEstado(EstadoVenta estado) {
         this.estado = estado;
     }
-
     public FechaVenta getFecha() {
         return fecha;
     }
-
     public void setFecha(FechaVenta fecha) {
         this.fecha = fecha;
     }
-
     public PrecioVenta getPrecioVenta() {
         return precioVenta;
     }
-
     public void setPrecioVenta(PrecioVenta precioVenta) {
         this.precioVenta = precioVenta;
     }
-
     public List<DetalleVenta> getDetalleVentaLista() {
         return detalleVentaLista;
     }
-
-    public void setDetalleVentaLista(List<DetalleVenta> detalleVentaLista) {
-        this.detalleVentaLista = detalleVentaLista;
-    }
-
-
-    public Long getPreventaId() {
-        return preventaId;
-    }
-
-    public void setPreventaId(Long preventaId) {
-        this.preventaId = preventaId;
-    }
-
-    public PreventaDTO getPreventaDetalles() {
-        return preventaDetalles;
-    }
-
-    public void setPreventaDetalles(PreventaDTO preventaDetalles) {
-        this.preventaDetalles = preventaDetalles;
-    }
+    public void setDetalleVentaLista(List<DetalleVenta> detalleVentaLista) {this.detalleVentaLista = detalleVentaLista;}
+    public Preventa getDetallePreventa() {return DetallePreventa;}
+    public void setDetallePreventa(Preventa detallePreventa) {DetallePreventa = detallePreventa;}
+    public Long getPreventaId() {return preventaId;}
+    public void setPreventaId(Long preventaId) {this.preventaId = preventaId;}
 
 
     public void agregarDetalleVenta(DetalleVenta detalleVenta){
@@ -124,13 +98,6 @@ public class Venta
     public void eliminarDetalleVenta(DetalleVenta detalleVenta){
         detalleVentaLista.remove(detalleVenta);
         detalleVenta.setVenta(null);
-    }
-    public void registrarVenta() {
-        this.estado = EstadoVenta.RESERVADA;
-    }
-
-    public void modificarEstado(EstadoVenta nuevoEstado) {
-        this.estado = nuevoEstado;
     }
 
 }

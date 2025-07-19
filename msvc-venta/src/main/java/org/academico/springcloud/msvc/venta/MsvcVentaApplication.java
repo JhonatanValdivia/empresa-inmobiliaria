@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients // Habilita el escaneo de clientes Feign en este microservicio
+@EnableFeignClients
 @SpringBootApplication
 public class MsvcVentaApplication {
 

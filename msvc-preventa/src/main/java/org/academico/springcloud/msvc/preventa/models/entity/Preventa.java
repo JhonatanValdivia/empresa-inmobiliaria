@@ -23,17 +23,21 @@ public class Preventa {
 
     private LocalDate fechaInicio;
 
+    // AÑADIDO: Estado de la preventa
     @Enumerated(EnumType.STRING)
     private EstadoPreventa estado; // "EnEvaluacion", "Aprobada", "Cancelada", "Finalizada"
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "preventa")
-    @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de los contratos
-    private List<ContratoVenta> contratosVenta;
+    // AÑADIDO: Relación con ContratoVenta
+    @OneToOne(mappedBy = "preventa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private ContratoVenta contratoVenta;
 
+    // AÑADIDO: Relación con PropuestaPago
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "preventa")
     @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de las propuestas
     private List<PropuestaPago> propuestasPago;
 
+    // AÑADIDO: Relación con VisitaProgramada
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "preventa")
     @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de las visitas
     private List<VisitaProgramada> visitasProgramadas;
@@ -41,7 +45,7 @@ public class Preventa {
     public Preventa() {
             this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
         this.fechaInicio = LocalDate.now();
-        this.contratosVenta = new ArrayList<>();
+        this.contratoVenta = null; // Inicialmente no hay contrato
         this.propuestasPago = new ArrayList<>();
         this.visitasProgramadas = new ArrayList<>();
     }
@@ -49,133 +53,57 @@ public class Preventa {
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public LocalDate getFechaInicio() {
         return fechaInicio;
     }
-
     public void setFechaInicio(LocalDate fechaInicio) {
         this.fechaInicio = fechaInicio;
     }
-
     public EstadoPreventa getEstado() {
         return estado;
     }
-
     public void setEstado(EstadoPreventa estado) {
         this.estado = estado;
     }
-
-    public List<ContratoVenta> getContratosVenta() {
-        return contratosVenta;
+    public ContratoVenta getContratoVenta() {
+        return contratoVenta;
     }
-
-    public void setContratosVenta(List<ContratoVenta> contratosVenta) {
-        this.contratosVenta = contratosVenta;
+    public void setContratoVenta(ContratoVenta contratoVenta) {
+        this.contratoVenta = contratoVenta;
     }
-
     public List<PropuestaPago> getPropuestasPago() {
         return propuestasPago;
     }
-
     public void setPropuestasPago(List<PropuestaPago> propuestasPago) {
         this.propuestasPago = propuestasPago;
     }
-
     public List<VisitaProgramada> getVisitasProgramadas() {
         return visitasProgramadas;
     }
+    public void setVisitasProgramadas(List<VisitaProgramada> visitasProgramadas) {this.visitasProgramadas = visitasProgramadas;}
 
-    public void setVisitasProgramadas(List<VisitaProgramada> visitasProgramadas) {
-        this.visitasProgramadas = visitasProgramadas;
-    }
 
-    // Métodos de negocio del agregado (Manejan la lógica interna de la Preventa)
-
-    public VisitaProgramada programarVisita(LocalDate fechaVisita) {
-        VisitaProgramada visita = new VisitaProgramada();
-        visita.setFecha(fechaVisita);
-        visita.setPreventa(this); // Asegura la relación bidireccional
-        this.visitasProgramadas.add(visita);
-        System.out.println("Visita programada para la preventa " + this.id + " en la fecha: " + fechaVisita);
-        return visita;
-    }
-
-    public ContratoVenta registrarContrato(TipoContrato tipoContrato, LocalDate fechaFirma) {
-        ContratoVenta contrato = new ContratoVenta();
-        contrato.setTipoContrato(tipoContrato);
-        contrato.setFechaFirma(fechaFirma);
-        contrato.setEstado("Firmado"); // Estado inicial al registrar el contrato
-        contrato.setPreventa(this); // Asegura la relación bidireccional
-        this.contratosVenta.add(contrato);
-        System.out.println("Contrato de tipo " + tipoContrato + " firmado para la preventa " + this.id);
-        return contrato;
-    }
-
-    public PropuestaPago registrarPago(BigDecimal monto, LocalDate fecha, MetodoPago metodo) {
-        PropuestaPago pago = new PropuestaPago();
-        pago.setMonto(monto);
-        pago.setFecha(fecha);
-        pago.setMetodoPago(metodo);
-        pago.setPreventa(this); // Asegura la relación bidireccional
-        this.propuestasPago.add(pago);
-        System.out.println("Pago de " + monto + " registrado para la preventa " + this.id + " con método: " + metodo);
-        return pago;
-    }
-
-    public BigDecimal calcularComision() {
-        BigDecimal totalContratos = this.contratosVenta.stream()
-                .filter(c -> "Firmado".equals(c.getEstado()))
-                .map(c -> BigDecimal.valueOf(100000)) // Ejemplo de monto fijo
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal comision = totalContratos.multiply(BigDecimal.valueOf(0.01));
-        System.out.println("Comisión calculada para la preventa " + this.id + ": " + comision);
-        return comision;
-    }
-
-    public void marcarComoFinalizado() {
-        boolean hasSignedContract = this.contratosVenta.stream()
-                .anyMatch(c -> "Firmado".equals(c.getEstado()));
-        if (hasSignedContract && this.estado != EstadoPreventa.CANCELADA) {
-            this.estado = EstadoPreventa.FINALIZADA;
-            System.out.println("Preventa " + this.id + " marcada como finalizada.");
-        } else {
-            throw new IllegalStateException("La preventa " + this.id + " no puede ser finalizada en su estado actual o sin un contrato firmado.");
+    public void aprobarPreventa() {
+        if (this.estado != EstadoPreventa.EN_EVALUACION) {
+            throw new IllegalStateException("La preventa solo puede ser aprobada si está EN EVALUACION. Estado actual: " + this.estado);
         }
+        this.estado = EstadoPreventa.APROBADA;
+        System.out.println("Preventa " + this.id + " marcada como APROBADA.");
     }
 
-    public void addContratoVenta(ContratoVenta contrato) {
-        this.contratosVenta.add(contrato);
-        contrato.setPreventa(this);
-    }
 
-    public void removeContratoVenta(ContratoVenta contrato) {
-        this.contratosVenta.remove(contrato);
-        contrato.setPreventa(null);
-    }
 
     public void addPropuestaPago(PropuestaPago propuesta) {
         this.propuestasPago.add(propuesta);
         propuesta.setPreventa(this);
     }
 
-    public void removePropuestaPago(PropuestaPago propuesta) {
-        this.propuestasPago.remove(propuesta);
-        propuesta.setPreventa(null);
-    }
-
-    public void addVisitaProgramada(VisitaProgramada visita) {
+        public void addVisitaProgramada(VisitaProgramada visita) {
         this.visitasProgramadas.add(visita);
         visita.setPreventa(this);
-    }
-
-    public void removeVisitaProgramada(VisitaProgramada visita) {
-        this.visitasProgramadas.remove(visita);
-        visita.setPreventa(null);
     }
 
     @Override
@@ -191,11 +119,6 @@ public class Preventa {
         return Objects.hash(id);
     }
 
-    public Optional<ContratoVenta> findContratoById(Long contratoId) {
-        return this.contratosVenta.stream()
-                .filter(c -> Objects.equals(c.getId(), contratoId))
-                .findFirst();
-    }
 
     public Optional<PropuestaPago> findPropuestaPagoById(Long propuestaId) {
         return this.propuestasPago.stream()

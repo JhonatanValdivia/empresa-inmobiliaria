@@ -28,38 +28,31 @@ public class VisitaProgramada {
     public VisitaProgramada() {
         this.estadoVisita = EstadoVisita.PROGRAMADA;
     }
-
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public LocalDate getFecha() {
         return fecha;
     }
-
     public void setFecha(LocalDate fecha) {
         this.fecha = fecha;
     }
-
     public EstadoVisita getEstadoVisita() {
         return estadoVisita;
     }
-
     public void setEstadoVisita(EstadoVisita estadoVisita) {
         this.estadoVisita = estadoVisita;
     }
-
     public Preventa getPreventa() {
         return preventa;
     }
-
     public void setPreventa(Preventa preventa) {
         this.preventa = preventa;
     }
+
 
     public void reprogramarVisita(LocalDate nuevaFecha) {
         if (this.estadoVisita == EstadoVisita.PROGRAMADA) {

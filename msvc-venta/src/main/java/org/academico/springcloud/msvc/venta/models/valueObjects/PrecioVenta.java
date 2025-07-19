@@ -1,7 +1,5 @@
 package org.academico.springcloud.msvc.venta.models.valueObjects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
 
 import java.math.BigDecimal;
@@ -12,23 +10,20 @@ import java.util.Objects;
 public class PrecioVenta
 {
 
-    private BigDecimal precioVenta;
-    private  String moneda;
+    private BigDecimal precioVenta; //representa decimales exactos y permite operaciones +,-,*,/ sin perder precision
+    private String moneda;
 
-    protected PrecioVenta(){}
+    public PrecioVenta(){}
 
-    @JsonCreator
-    public PrecioVenta(@JsonProperty("precioVenta") BigDecimal precioVenta,
-                       @JsonProperty("moneda") String moneda) {
+    public PrecioVenta(BigDecimal valor, String moneda) {
+    if(valor==null || valor.compareTo(BigDecimal.ZERO)<=0){
+        throw new IllegalArgumentException("El valor debe ser mayor que cero");
+    }
+    if(moneda==null ||moneda.isBlank()){
+        throw new IllegalArgumentException("El valor debe ser mayor que cero");
+    }
 
-        if (precioVenta == null || precioVenta.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El valor debe ser mayor que cero");
-        }
-        if (moneda == null || moneda.isBlank()) {
-            throw new IllegalArgumentException("La moneda no puede ser vacía");
-        }
-
-        this.precioVenta = precioVenta;
+    this.precioVenta = valor;
         this.moneda = moneda;
     }
 
@@ -39,7 +34,6 @@ public class PrecioVenta
     public String getMoneda() {
         return moneda;
     }
-
     @Override
     public boolean equals(Object object){
         if(this==object)
@@ -59,5 +53,6 @@ public class PrecioVenta
 
     @Override
     public String toString(){
-        return precioVenta +" "+moneda;}
+        return precioVenta +" "+moneda;
+    }
 }

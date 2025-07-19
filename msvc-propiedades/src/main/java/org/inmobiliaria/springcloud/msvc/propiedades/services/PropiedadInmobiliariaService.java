@@ -16,18 +16,22 @@ public interface PropiedadInmobiliariaService {
     // Documentos legales (1:N)
     Optional<PropiedadInmobiliaria> agregarDocumento(Long propiedadId, DocumentoLegal documento);
     Optional<PropiedadInmobiliaria> removerDocumento(Long propiedadId, Long documentoId);
+    Optional<PropiedadInmobiliaria> editarDocumento(Long propiedadId, DocumentoLegal documento);
+
 
     // Servicios (1:N)
     Optional<PropiedadInmobiliaria> agregarServicio(Long propiedadId, Servicio servicio);
     Optional<PropiedadInmobiliaria> removerServicio(Long propiedadId, Long servicioId);
-
+    Optional<PropiedadInmobiliaria> editarServicio(Long propiedadId, Servicio servicio);
     // Expediente (1:1)
     Optional<PropiedadInmobiliaria> asignarExpediente(Long propiedadId, Expediente expediente);
     Optional<PropiedadInmobiliaria> quitarExpediente(Long propiedadId);
-
+    Optional<PropiedadInmobiliaria> editarExpediente(Long propiedadId, Expediente expediente);
     // Planos via expediente
     Optional<PropiedadInmobiliaria> agregarPlano(Long propiedadId, Plano plano);
     Optional<PropiedadInmobiliaria> removerPlano(Long propiedadId, Long planoId);
+    Optional<PropiedadInmobiliaria> editarPlano(Long propiedadId, Plano plano);
+
 
 
 

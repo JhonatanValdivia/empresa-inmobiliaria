@@ -11,6 +11,7 @@ import org.inmobiliaria.springcloud.msvc.propiedades.models.valueObjects.Zonific
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Entity
 @Table
@@ -177,6 +178,9 @@ public class PropiedadInmobiliaria {
         this.expediente = expediente;
     }
 
+
+
+
     // metodosssssssssssssssss
 
     public void agregarDocumentoLegal(DocumentoLegal doc) {
@@ -199,7 +203,25 @@ public class PropiedadInmobiliaria {
             docAEliminar.setPropiedad(null);
             documentosLegales.remove(docAEliminar);
         }
+
+
     }
+
+    public void editarDocumentoLegal(DocumentoLegal docEditado) {
+
+
+        for (int i = 0; i < documentosLegales.size(); i++) {
+            DocumentoLegal actual = documentosLegales.get(i);
+            if (actual.getIdDocumentoLegal() != null && actual.getIdDocumentoLegal().equals(docEditado.getIdDocumentoLegal())) {
+                docEditado.setPropiedad(this); // volver a asociar con esta propiedad
+                documentosLegales.set(i, docEditado); // reemplazar el documento
+                return;
+            }
+        }
+
+
+    }
+
 
     public void agregarServicio(Servicio servicio) {
         servicio.setPropiedad(this);
@@ -220,6 +242,17 @@ public class PropiedadInmobiliaria {
         }
     }
 
+    public void editarServicio(Servicio servicioEditado) {
+        for (int i = 0; i < servicios.size(); i++) {
+            Servicio actual = servicios.get(i);
+            if (actual.getIdServicio() != null && actual.getIdServicio().equals(servicioEditado.getIdServicio())) {
+                servicioEditado.setPropiedad(this); // asociar a esta propiedad
+                servicios.set(i, servicioEditado);
+                return;
+            }
+        }
+    }
+
 
     public void asignarExpediente(Expediente expediente) {
 
@@ -235,20 +268,16 @@ public class PropiedadInmobiliaria {
         }
     }
 
+    public void editarExpediente(Expediente expedienteEditado) {
+        if (this.expediente != null && expedienteEditado.getIdExpediente() != null &&
+                this.expediente.getIdExpediente().equals(expedienteEditado.getIdExpediente())) {
+
+            expedienteEditado.setPropiedad(this);
+            this.expediente = expedienteEditado;
+        }
+    }
 
 
-
-// estos son los externos que bienen de otros agregados
-/*
-    @Embedded
-    @AttributeOverride(name = "valor", column = @Column(name = "id_usuario"))
-    private UsuarioId idUsuario;
-
-    @Embedded
-    @AttributeOverride(name = "valor", column = @Column(name = "id_norma", nullable = false))
-    private NormaId idNorma;
-
-     */
 
 
 }

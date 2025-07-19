@@ -3,7 +3,7 @@ package org.academico.springcloud.msvc.venta.services;
 //import org.academico.springcloud.msvc.venta.clients.ComisionClientRest;
 import feign.FeignException;
 import org.academico.springcloud.msvc.venta.clients.PreventaClientRest;
-import org.academico.springcloud.msvc.venta.models.dtos.PreventaDTO;
+import org.academico.springcloud.msvc.venta.models.Preventa;
 import org.academico.springcloud.msvc.venta.models.entities.DetalleVenta;
 import org.academico.springcloud.msvc.venta.models.entities.Venta;
 import org.academico.springcloud.msvc.venta.repositories.VentaRepository;
@@ -18,34 +18,23 @@ import java.util.stream.Collectors;
 @Service
 public class VentaServiceImpl implements VentaService{
 
-@Autowired
-private VentaRepository ventaRepository;
+
 
     @Autowired
-    private PreventaClientRest preventaClient; // INYECCIÓN: Cliente Feign para msvc-preventa
+    private VentaRepository ventaRepository;
 
-    // INICIO CAMBIOS: Modificación del método listar()
+    @Autowired
+    private PreventaClientRest preventaClient;
+
     @Override
     @Transactional(readOnly = true)
     public List<Venta> listar() {
         List<Venta> ventas = (List<Venta>) ventaRepository.findAll();
-
-        // Iterar sobre cada Venta para cargar los detalles de Preventa
-        return ventas.stream().map(venta -> {
-            if (venta.getPreventaId() != null) {
-                try {
-                    // Llamada al microservicio Preventa
-                    PreventaDTO preventaDTO = preventaClient.getPreventaById(venta.getPreventaId());
-                    venta.setPreventaDetalles(preventaDTO); // Asigna el DTO al campo @Transient
-                } catch (FeignException e) {
-                    System.err.println("Error al obtener detalles de Preventa " + venta.getPreventaId() + " para Venta " + venta.getId() + ": " + e.getMessage());
-                    // El campo preventaDetalles simplemente quedará nulo si hay un error
-                }
-            }
-            return venta;
-        }).collect(Collectors.toList());
+        // Usamos un stream para aplicar la lógica de enriquecimiento a cada elemento de la lista.
+        return ventas.stream()
+                .map(this::enriquecerConPreventa)
+                .collect(Collectors.toList());
     }
-    // FIN CAMBIOS
 
     @Override
     @Transactional(readOnly = true)
@@ -53,35 +42,16 @@ private VentaRepository ventaRepository;
         return (List<Venta>) ventaRepository.findAllById(ids);
     }
 
-    // Este es el método clave para 'detalleVenta'
     @Override
     @Transactional(readOnly = true)
     public Optional<Venta> porId(Long id) {
-        Optional<Venta> opVenta = ventaRepository.findById(id);
-        if (opVenta.isPresent()) {
-            Venta venta = opVenta.get();
-            // INICIO CAMBIOS: Lógica de composición en porId()
-            if (venta.getPreventaId() != null) {
-                try {
-                    PreventaDTO preventaDTO = preventaClient.getPreventaById(venta.getPreventaId());
-                    venta.setPreventaDetalles(preventaDTO);
-                } catch (FeignException e) {
-                    System.err.println("Error al obtener detalles de Preventa " + venta.getPreventaId() + " para Venta " + venta.getId() + ": " + e.getMessage());
-                }
-            }
-            // FIN CAMBIOS
-            return Optional.of(venta);
-        }
-        return Optional.empty();
+        // Usamos map para aplicar la lógica de enriquecimiento solo si la venta existe.
+        return ventaRepository.findById(id).map(this::enriquecerConPreventa);
     }
-
 
     @Override
     @Transactional
     public Venta guardar(Venta venta) {
-        if (venta.getId() == null) {
-            venta.registrarVenta();
-        }
         return ventaRepository.save(venta);
     }
 
@@ -109,6 +79,8 @@ private VentaRepository ventaRepository;
         ventaRepository.delete(venta);
     }
 
+
+    // Métodos para manejar la relación entre Venta y DetalleVenta
     @Override
     @Transactional
     public void agregarDetalle(Long ventaId, DetalleVenta detalleVenta) {
@@ -122,90 +94,91 @@ private VentaRepository ventaRepository;
         nuevoDetalle.setVenta(venta);
 
         venta.agregarDetalleVenta(nuevoDetalle);
+
         ventaRepository.save(venta);
     }
 
     @Override
     @Transactional
     public void eliminarDetalle(Long ventaId, Long detalleId) {
-        Venta venta = ventaRepository.findById(ventaId)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
-        DetalleVenta detalleAEliminar = venta.getDetalleVentaLista().stream()
-                .filter(d -> d.getId().equals(detalleId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("DetalleVenta no encontrado"));
+        Venta venta=ventaRepository.findById(ventaId).orElseThrow(()-> new RuntimeException("Venta no encontrada"));
+        DetalleVenta detalleAEliminar = null;
+        for (DetalleVenta d : venta.getDetalleVentaLista()) {
+            if (d.getId().equals(detalleId)) {
+                detalleAEliminar = d;
+                break;
+            }
+        }
+
+        if (detalleAEliminar == null) {
+            throw new RuntimeException("DetalleVenta no encontrado");
+        }
+
         venta.eliminarDetalleVenta(detalleAEliminar);
         ventaRepository.save(venta);
     }
-    // INICIO CAMBIOS: Implementación de la relación con Preventa (Rol Activo)
 
+    // Métodos para manejar la relación con Preventa
     @Override
     @Transactional
-    public Optional<Venta> asignarPreventaAVenta(Long ventaId, Long preventaId) {
-        Optional<Venta> opVenta = ventaRepository.findById(ventaId);
-        if (opVenta.isPresent()) {
-            Venta venta = opVenta.get();
-
-            // 1. Validar si la venta ya tiene una preventa asignada
+    public Optional<Venta> asignarPreventa(Long ventaId, Long preventaId) {
+        Optional<Venta> ventaOpt = ventaRepository.findById(ventaId);
+        if (ventaOpt.isPresent()) {
+            Venta venta = ventaOpt.get();
             if (venta.getPreventaId() != null) {
-                if (venta.getPreventaId().equals(preventaId)) {
-                    return Optional.of(venta); // Ya está asignada a esta preventa, no hacer nada.
-                }
-                throw new IllegalStateException("La venta " + ventaId + " ya está asignada a la preventa " + venta.getPreventaId());
+                throw new IllegalStateException("La Venta " + ventaId + " ya tiene una preventa asignada.");
             }
 
-            // 2. Validar si la Preventa existe en el microservicio de Preventas
-            // NO podemos validar si la Preventa ya está asignada a OTRA Venta,
-            // porque Preventa no tiene el campo ventaId para consultarlo.
-            // La unicidad 1:1 solo se impone desde el lado de Venta en este escenario.
             try {
-                preventaClient.getPreventaById(preventaId); // Solo para verificar que la Preventa exista
-            } catch (FeignException.NotFound e) { // La Preventa no existe
-                throw new IllegalArgumentException("La Preventa " + preventaId + " no existe.", e);
-            } catch (FeignException e) { // Otros errores de comunicación
-                throw new RuntimeException("Error al comunicarse con msvc-preventa para verificar Preventa " + preventaId + ": " + e.getMessage(), e);
+
+                Preventa preventaPojo = preventaClient.getPreventaById(preventaId);
+
+                  if (!"APROBADA".equals(preventaPojo.getEstado())) {
+                    throw new IllegalStateException(
+                            "No se puede asignar la Preventa con ID " + preventaId +
+                                    ". Su estado es '" + preventaPojo.getEstado() + "', pero se requiere el estado 'APROBADA'."
+                    );
+                }
+
+                System.out.println("Preventa encontrada y aprobada: " + preventaPojo.getId());
+
+            } catch (FeignException.NotFound e) {
+                throw new IllegalArgumentException("La Preventa con id " + preventaId + " no existe.", e);
+            } catch (FeignException e) {
+                throw new RuntimeException("Error de comunicación con el servicio de preventas: " + e.getMessage(), e);
             }
 
-            // 3. Asignar la preventaId a la venta localmente
-            venta.setPreventaId(preventaId);
-            Venta ventaGuardada = ventaRepository.save(venta);
-
-            // IMPORTANTE: NO SE NOTIFICA A msvc-preventa para que registre el ventaId,
-            // ya que el requisito es NO CAMBIAR msvc-preventa.
-            // Esto significa que la relación 1:1 es unidireccional desde Venta.
-
-            return Optional.of(ventaGuardada);
+             venta.setPreventaId(preventaId);
+            return Optional.of(ventaRepository.save(venta));
         }
         return Optional.empty();
     }
 
     @Override
     @Transactional
-    public Optional<Venta> desasignarPreventaDeVenta(Long ventaId) {
-        Optional<Venta> opVenta = ventaRepository.findById(ventaId);
-        if (opVenta.isPresent()) {
-            Venta venta = opVenta.get();
-            Long oldPreventaId = venta.getPreventaId(); // Guardamos el ID por si necesitamos revertir (aunque no hay reversión en Preventa)
-
-            if (oldPreventaId == null) {
-                throw new IllegalStateException("La venta " + ventaId + " no tiene una preventa asignada.");
+    public Optional<Venta> desasignarPreventa(Long ventaId) {
+        Optional<Venta> ventaOpt = ventaRepository.findById(ventaId);
+        if (ventaOpt.isPresent()) {
+            Venta venta = ventaOpt.get();
+            if (venta.getPreventaId() == null) {
+                throw new IllegalStateException("La Venta " + ventaId + " no tiene ninguna preventa asignada.");
             }
-
-            // Desasignar la preventaId de la venta
             venta.setPreventaId(null);
             return Optional.of(ventaRepository.save(venta));
-
-            // IMPORTANTE: NO SE NOTIFICA A msvc-preventa para que elimine el ventaId,
-            // por la misma razón de NO CAMBIAR msvc-preventa.
         }
         return Optional.empty();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isVentaAvailableForPreventa(Long ventaId) {
-        Optional<Venta> opVenta = ventaRepository.findById(ventaId);
-        // Una venta está disponible si existe y su preventaId es nulo
-        return opVenta.map(venta -> venta.getPreventaId() == null).orElse(false);
+    private Venta enriquecerConPreventa(Venta venta) {
+        if (venta.getPreventaId() != null) {
+            try {
+                Preventa preventaPojo = preventaClient.getPreventaById(venta.getPreventaId());
+                venta.setDetallePreventa(preventaPojo);
+            } catch (FeignException e) {
+                System.err.println("ADVERTENCIA: No se pudieron obtener detalles de la Preventa " + venta.getPreventaId() + ". La Venta se devolverá sin esta información. Error: " + e.getMessage());
+            }
+        }
+        return venta;
     }
 }
+

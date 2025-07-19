@@ -26,12 +26,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/preventas")
-public class PreventaController {
+public class  PreventaController {
 
     @Autowired
     private PreventaService service;
 
-    // --- CRUD para Preventa (Agregado Raíz) ---
+    // Agregado Raiz:
+
     @GetMapping
     public ResponseEntity<List<Preventa>> listar() {
         return ResponseEntity.ok(service.listar());
@@ -64,10 +65,7 @@ public class PreventaController {
             Preventa preventaDB = preventaOp.get();
             preventaDB.setFechaInicio(preventa.getFechaInicio());
             preventaDB.setEstado(preventa.getEstado());
-            // Las colecciones anidadas (contratos, propuestas, visitas) se manejan
-            // a través de sus propios endpoints anidados, no se actualizan directamente aquí.
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(preventaDB));
+             return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(preventaDB));
         }
         return ResponseEntity.notFound().build();
     }
@@ -82,146 +80,81 @@ public class PreventaController {
         return ResponseEntity.notFound().build();
     }
 
-    // --- Métodos de Negocio para el Agregado Preventa ---
-    @PutMapping("/{preventaId}/programar-visita")
-    public ResponseEntity<?> programarVisita(@PathVariable Long preventaId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaVisita) {
-        Optional<Preventa> preventaOp = service.programarVisitaEnPreventa(preventaId, fechaVisita);
-        if (preventaOp.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(preventaOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
 
-    @PutMapping("/{preventaId}/registrar-contrato")
-    public ResponseEntity<?> registrarContrato(@PathVariable Long preventaId, @RequestParam TipoContrato tipoContrato, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFirma) {
-        Optional<Preventa> preventaOp = service.registrarContratoEnPreventa(preventaId, tipoContrato, fechaFirma);
-        if (preventaOp.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(preventaOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
 
-    @PutMapping("/{preventaId}/registrar-pago")
-    public ResponseEntity<?> registrarPago(@PathVariable Long preventaId, @RequestParam BigDecimal monto, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha, @RequestParam MetodoPago metodo) {
-        Optional<Preventa> preventaOp = service.registrarPagoEnPreventa(preventaId, monto, fecha, metodo);
-        if (preventaOp.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(preventaOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/{preventaId}/calcular-comision")
-    public ResponseEntity<?> calcularComision(@PathVariable Long preventaId) {
-        Optional<BigDecimal> comisionOp = service.calcularComisionPreventa(preventaId);
-        if (comisionOp.isPresent()) {
-            return ResponseEntity.ok(Collections.singletonMap("comision", comisionOp.get()));
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @PutMapping("/{preventaId}/finalizar")
-    public ResponseEntity<?> marcarComoFinalizado(@PathVariable Long preventaId) {
+    // Métodos de Negocio para el Agregado Preventa
+    @PutMapping("/{preventaId}/aprobar")
+    public ResponseEntity<?> aprobarPreventa(@PathVariable Long preventaId) {
         try {
-            Optional<Preventa> preventaOp = service.marcarPreventaComoFinalizada(preventaId);
-            if (preventaOp.isPresent()) {
-                return ResponseEntity.status(HttpStatus.OK).body(preventaOp.get());
-            }
-            return ResponseEntity.notFound().build();
+            Optional<Preventa> preventaOp = service.aprobarPreventa(preventaId);
+
+            return preventaOp
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+
         } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", e.getMessage()));
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
 
-    // --- CRUD Anidado para ContratoVenta ---
-    @GetMapping("/{preventaId}/contratos")
-    public ResponseEntity<List<ContratoVenta>> listarContratos(@PathVariable Long preventaId) {
-        Optional<List<ContratoVenta>> contratosOp = service.listarContratosPorPreventa(preventaId);
-        if (contratosOp.isPresent()) {
-            return ResponseEntity.ok(contratosOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
+    //  CRUD Anidado para ContratoVenta
 
-    @GetMapping("/{preventaId}/contratos/{contratoId}")
-    public ResponseEntity<?> detalleContrato(@PathVariable Long preventaId, @PathVariable Long contratoId) {
-        Optional<ContratoVenta> contratoOp = service.porIdContratoVenta(preventaId, contratoId);
-        if (contratoOp.isPresent()) {
-            return ResponseEntity.ok(contratoOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @PostMapping("/{preventaId}/contratos")
-    public ResponseEntity<?> crearContrato(@PathVariable Long preventaId,  @RequestBody ContratoVenta contrato, BindingResult result) {
-        if (result.hasErrors()) {
-            return validar(result);
-        }
-        Optional<Preventa> preventaActualizadaOp = service.agregarContratoVenta(preventaId, contrato);
-        if (preventaActualizadaOp.isPresent()) {
-            // Retornar el contrato recién creado si se desea, o el agregado actualizado
-            ContratoVenta createdContrato = preventaActualizadaOp.get().getContratosVenta().stream()
-                    .filter(c -> contrato.getTipoContrato().equals(c.getTipoContrato()) && contrato.getFechaFirma().equals(c.getFechaFirma())) // Esto puede ser riesgoso si hay múltiples contratos idénticos
-                    .reduce((first, second) -> second) // Get the last one added (likely the new one)
-                    .orElse(null); // Fallback
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdContrato != null ? createdContrato : preventaActualizadaOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @PutMapping("/{preventaId}/contratos/{contratoId}")
-    public ResponseEntity<?> editarContrato(@PathVariable Long preventaId, @PathVariable Long contratoId,  @RequestBody ContratoVenta contrato, BindingResult result) {
-        if (result.hasErrors()) {
-            return validar(result);
-        }
-        Optional<ContratoVenta> contratoActualizadoOp = service.actualizarContratoVenta(preventaId, contratoId, contrato);
-        if (contratoActualizadoOp.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(contratoActualizadoOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping("/{preventaId}/contratos/{contratoId}")
-    public ResponseEntity<?> eliminarContrato(@PathVariable Long preventaId, @PathVariable Long contratoId) {
-        Optional<Preventa> preventaOp = service.eliminarContratoVenta(preventaId, contratoId);
-        if (preventaOp.isPresent()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @PutMapping("/{preventaId}/contratos/{contratoId}/anular")
-    public ResponseEntity<?> anularContrato(@PathVariable Long preventaId, @PathVariable Long contratoId) {
+    @PostMapping("/{preventaId}/contrato")
+    public ResponseEntity<?> crearContrato(@PathVariable Long preventaId, @RequestBody ContratoVenta contrato, BindingResult result) {
+        if (result.hasErrors()) return validar(result);
         try {
-            Optional<ContratoVenta> contratoOp = service.anularContratoPreventa(preventaId, contratoId);
-            if (contratoOp.isPresent()) {
-                return ResponseEntity.ok(contratoOp.get());
-            }
-            return ResponseEntity.notFound().build();
+            return service.agregarContratoVenta(preventaId, contrato)
+                    .map(c -> ResponseEntity.status(HttpStatus.CREATED).body(c))
+                    .orElse(ResponseEntity.notFound().build());
         } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", e.getMessage()));
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
-
-    // --- CRUD Anidado para PropuestaPago ---
-    @GetMapping("/{preventaId}/propuestas-pago")
-    public ResponseEntity<List<PropuestaPago>> listarPropuestasPago(@PathVariable Long preventaId) {
-        Optional<List<PropuestaPago>> propuestasOp = service.listarPropuestasPagoPorPreventa(preventaId);
-        if (propuestasOp.isPresent()) {
-            return ResponseEntity.ok(propuestasOp.get());
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping("/{preventaId}/contrato")
+    public ResponseEntity<?> obtenerContrato(@PathVariable Long preventaId) {
+        return service.obtenerContratoPorPreventa(preventaId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{preventaId}/propuestas-pago/{propuestaId}")
-    public ResponseEntity<?> detallePropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId) {
-        Optional<PropuestaPago> propuestaOp = service.porIdPropuestaPago(preventaId, propuestaId);
-        if (propuestaOp.isPresent()) {
-            return ResponseEntity.ok(propuestaOp.get());
+
+    @PutMapping("/{preventaId}/contrato")
+    public ResponseEntity<?> editarContrato(@PathVariable Long preventaId, @RequestBody ContratoVenta contrato, BindingResult result) {
+        if (result.hasErrors()) return validar(result);
+        try {
+            return service.actualizarContratoVenta(preventaId, contrato)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
-        return ResponseEntity.notFound().build();
     }
+
+    @DeleteMapping("/{preventaId}/contrato")
+    public ResponseEntity<?> eliminarContrato(@PathVariable Long preventaId) {
+        try {
+            return service.eliminarContratoVenta(preventaId)
+                    .map(p -> ResponseEntity.noContent().build())
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{preventaId}/contrato/anular")
+    public ResponseEntity<?> anularContrato(@PathVariable Long preventaId) {
+        try {
+            return service.anularContratoPreventa(preventaId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    //  CRUD Anidado para PropuestaPago
 
     @PostMapping("/{preventaId}/propuestas-pago")
     public ResponseEntity<?> crearPropuestaPago(@PathVariable Long preventaId,  @RequestBody PropuestaPago propuesta, BindingResult result) {
@@ -239,6 +172,26 @@ public class PreventaController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/{preventaId}/propuestas-pago")
+    public ResponseEntity<List<PropuestaPago>> listarPropuestasPago(@PathVariable Long preventaId) {
+        Optional<List<PropuestaPago>> propuestasOp = service.listarPropuestasPagoPorPreventa(preventaId);
+        if (propuestasOp.isPresent()) {
+            return ResponseEntity.ok(propuestasOp.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
+    @GetMapping("/{preventaId}/propuestas-pago/{propuestaId}")
+    public ResponseEntity<?> detallePropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId) {
+        Optional<PropuestaPago> propuestaOp = service.porIdPropuestaPago(preventaId, propuestaId);
+        if (propuestaOp.isPresent()) {
+            return ResponseEntity.ok(propuestaOp.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
     @PutMapping("/{preventaId}/propuestas-pago/{propuestaId}")
     public ResponseEntity<?> editarPropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId, @RequestBody PropuestaPago propuesta, BindingResult result) {
         if (result.hasErrors()) {
@@ -251,14 +204,6 @@ public class PreventaController {
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{preventaId}/propuestas-pago/{propuestaId}")
-    public ResponseEntity<?> eliminarPropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId) {
-        Optional<Preventa> preventaOp = service.eliminarPropuestaPago(preventaId, propuestaId);
-        if (preventaOp.isPresent()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
 
     @PutMapping("/{preventaId}/propuestas-pago/{propuestaId}/aceptar")
     public ResponseEntity<?> aceptarPropuesta(@PathVariable Long preventaId, @PathVariable Long propuestaId) {
@@ -271,23 +216,6 @@ public class PreventaController {
 
 
     // --- CRUD Anidado para VisitaProgramada ---
-    @GetMapping("/{preventaId}/visitas-programadas")
-    public ResponseEntity<List<VisitaProgramada>> listarVisitasProgramadas(@PathVariable Long preventaId) {
-        Optional<List<VisitaProgramada>> visitasOp = service.listarVisitasProgramadasPorPreventa(preventaId);
-        if (visitasOp.isPresent()) {
-            return ResponseEntity.ok(visitasOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/{preventaId}/visitas-programadas/{visitaId}")
-    public ResponseEntity<?> detalleVisitaProgramada(@PathVariable Long preventaId, @PathVariable Long visitaId) {
-        Optional<VisitaProgramada> visitaOp = service.porIdVisitaProgramada(preventaId, visitaId);
-        if (visitaOp.isPresent()) {
-            return ResponseEntity.ok(visitaOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
 
     @PostMapping("/{preventaId}/visitas-programadas")
     public ResponseEntity<?> crearVisitaProgramada(@PathVariable Long preventaId,@RequestBody VisitaProgramada visita, BindingResult result) {
@@ -305,6 +233,17 @@ public class PreventaController {
         return ResponseEntity.notFound().build();
     }
 
+
+    @GetMapping("/{preventaId}/visitas-programadas")
+    public ResponseEntity<List<VisitaProgramada>> listarVisitasProgramadas(@PathVariable Long preventaId) {
+        Optional<List<VisitaProgramada>> visitasOp = service.listarVisitasProgramadasPorPreventa(preventaId);
+        if (visitasOp.isPresent()) {
+            return ResponseEntity.ok(visitasOp.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
     @PutMapping("/{preventaId}/visitas-programadas/{visitaId}")
     public ResponseEntity<?> editarVisitaProgramada(@PathVariable Long preventaId, @PathVariable Long visitaId, @RequestBody VisitaProgramada visita, BindingResult result) {
         if (result.hasErrors()) {
@@ -317,19 +256,11 @@ public class PreventaController {
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{preventaId}/visitas-programadas/{visitaId}")
-    public ResponseEntity<?> eliminarVisitaProgramada(@PathVariable Long preventaId, @PathVariable Long visitaId) {
-        Optional<Preventa> preventaOp = service.eliminarVisitaProgramada(preventaId, visitaId);
-        if (preventaOp.isPresent()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
     @PutMapping("/{preventaId}/visitas-programadas/{visitaId}/reprogramar")
-    public ResponseEntity<?> reprogramarVisita(@PathVariable Long preventaId, @PathVariable Long visitaId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate nuevaFecha) {
+    public ResponseEntity<?> reprogramarVisita(@PathVariable Long preventaId, @PathVariable Long visitaId, @RequestBody VisitaProgramada request) {
         try {
-            Optional<VisitaProgramada> visitaOp = service.reprogramarVisitaPreventa(preventaId, visitaId, nuevaFecha);
+            // Se extrae la fecha del objeto request
+            Optional<VisitaProgramada> visitaOp = service.reprogramarVisitaPreventa(preventaId, visitaId, request.getFecha());
             if (visitaOp.isPresent()) {
                 return ResponseEntity.ok(visitaOp.get());
             }
@@ -339,9 +270,11 @@ public class PreventaController {
         }
     }
 
+
     @PutMapping("/{preventaId}/visitas-programadas/{visitaId}/actualizar-estado")
-    public ResponseEntity<?> actualizarEstadoVisita(@PathVariable Long preventaId, @PathVariable Long visitaId, @RequestParam EstadoVisita nuevoEstado) {
-        Optional<VisitaProgramada> visitaOp = service.actualizarEstadoVisitaPreventa(preventaId, visitaId, nuevoEstado);
+    public ResponseEntity<?> actualizarEstadoVisita(@PathVariable Long preventaId, @PathVariable Long visitaId, @RequestBody VisitaProgramada request) {
+        // Se extrae el estado del objeto request
+        Optional<VisitaProgramada> visitaOp = service.actualizarEstadoVisitaPreventa(preventaId, visitaId, request.getEstadoVisita());
         if (visitaOp.isPresent()) {
             return ResponseEntity.ok(visitaOp.get());
         }

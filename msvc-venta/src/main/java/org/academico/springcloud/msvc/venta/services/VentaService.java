@@ -22,8 +22,8 @@ public interface VentaService
     void agregarDetalle(Long ventaId, DetalleVenta detalleVenta);
     void eliminarDetalle(Long ventaId, Long detalleId);
 
-// Métodos para la relación con Preventa (Rol Activo)
-    Optional<Venta> asignarPreventaAVenta(Long ventaId, Long preventaId); // Asigna Preventa a Venta
-    Optional<Venta> desasignarPreventaDeVenta(Long ventaId); // Desasigna Preventa de Venta
-    boolean isVentaAvailableForPreventa(Long ventaId); // Verifica disponibilidad de Venta
+    // Métodos para la relación con Preventa
+    Optional<Venta> asignarPreventa(Long ventaId, Long preventaId);
+    Optional<Venta> desasignarPreventa(Long ventaId);
+
 }

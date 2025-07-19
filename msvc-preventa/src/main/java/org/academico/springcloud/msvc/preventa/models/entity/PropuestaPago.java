@@ -31,64 +31,20 @@ public class PropuestaPago {
     public PropuestaPago() {
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() {return id;}
+    public void setId(Long id) {this.id = id;}
+    public BigDecimal getMonto() {return monto;}
+    public void setMonto(BigDecimal monto) {this.monto = monto;}
+    public LocalDate getFecha() {return fecha;}
+    public void setFecha(LocalDate fecha) {this.fecha = fecha;}
+    public Integer getCuotas() {return cuotas;}
+    public void setCuotas(Integer cuotas) {this.cuotas = cuotas;}
+    public MetodoPago getMetodoPago() {return metodoPago;}
+    public void setMetodoPago(MetodoPago metodoPago) {this.metodoPago = metodoPago;}
+    public Preventa getPreventa() {return preventa;}
+    public void setPreventa(Preventa preventa) {this.preventa = preventa;}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
-    public BigDecimal getMonto() {
-        return monto;
-    }
-
-    public void setMonto(BigDecimal monto) {
-        this.monto = monto;
-    }
-
-    public LocalDate getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
-    }
-
-    public Integer getCuotas() {
-        return cuotas;
-    }
-
-    public void setCuotas(Integer cuotas) {
-        this.cuotas = cuotas;
-    }
-
-    public MetodoPago getMetodoPago() {
-        return metodoPago;
-    }
-
-    public void setMetodoPago(MetodoPago metodoPago) {
-        this.metodoPago = metodoPago;
-    }
-
-    public Preventa getPreventa() {
-        return preventa;
-    }
-
-    public void setPreventa(Preventa preventa) {
-        this.preventa = preventa;
-    }
-
-    public void registrarPropuesta() {
-        System.out.println("Propuesta de pago registrada con monto: " + this.monto);
-    }
-
-    public void actualizarPropuesta(BigDecimal nuevoMonto, Integer nuevasCuotas, MetodoPago nuevoMetodo) {
-        this.monto = nuevoMonto;
-        this.cuotas = nuevasCuotas;
-        this.metodoPago = nuevoMetodo;
-        System.out.println("Propuesta de pago actualizada.");
-    }
 
     public void aceptarPropuesta() {
         System.out.println("Propuesta de pago aceptada.");
