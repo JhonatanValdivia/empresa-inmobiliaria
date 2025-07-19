@@ -31,7 +31,8 @@ public class  PreventaController {
     @Autowired
     private PreventaService service;
 
-    // --- CRUD para Preventa (Agregado Raíz) ---
+    // Agregado Raiz:
+
     @GetMapping
     public ResponseEntity<List<Preventa>> listar() {
         return ResponseEntity.ok(service.listar());
@@ -64,10 +65,7 @@ public class  PreventaController {
             Preventa preventaDB = preventaOp.get();
             preventaDB.setFechaInicio(preventa.getFechaInicio());
             preventaDB.setEstado(preventa.getEstado());
-            // Las colecciones anidadas (contratos, propuestas, visitas) se manejan
-            // a través de sus propios endpoints anidados, no se actualizan directamente aquí.
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(preventaDB));
+             return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(preventaDB));
         }
         return ResponseEntity.notFound().build();
     }
@@ -82,34 +80,25 @@ public class  PreventaController {
         return ResponseEntity.notFound().build();
     }
 
-    // --- Métodos de Negocio para el Agregado Preventa ---
 
 
-
-
-    @PutMapping("/{preventaId}/finalizar")
-    public ResponseEntity<?> marcarComoFinalizado(@PathVariable Long preventaId) {
+    // Métodos de Negocio para el Agregado Preventa
+    @PutMapping("/{preventaId}/aprobar")
+    public ResponseEntity<?> aprobarPreventa(@PathVariable Long preventaId) {
         try {
-            Optional<Preventa> preventaOp = service.marcarPreventaComoFinalizada(preventaId);
-            if (preventaOp.isPresent()) {
-                return ResponseEntity.status(HttpStatus.OK).body(preventaOp.get());
-            }
-            return ResponseEntity.notFound().build();
+            Optional<Preventa> preventaOp = service.aprobarPreventa(preventaId);
+
+            return preventaOp
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+
         } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", e.getMessage()));
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
 
-    // --- CRUD Anidado para ContratoVenta ---
-
-
-    @GetMapping("/{preventaId}/contrato")
-    public ResponseEntity<?> obtenerContrato(@PathVariable Long preventaId) {
-        return service.obtenerContratoPorPreventa(preventaId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    //  CRUD Anidado para ContratoVenta
 
     @PostMapping("/{preventaId}/contrato")
     public ResponseEntity<?> crearContrato(@PathVariable Long preventaId, @RequestBody ContratoVenta contrato, BindingResult result) {
@@ -122,6 +111,14 @@ public class  PreventaController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/{preventaId}/contrato")
+    public ResponseEntity<?> obtenerContrato(@PathVariable Long preventaId) {
+        return service.obtenerContratoPorPreventa(preventaId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 
     @PutMapping("/{preventaId}/contrato")
     public ResponseEntity<?> editarContrato(@PathVariable Long preventaId, @RequestBody ContratoVenta contrato, BindingResult result) {
@@ -157,24 +154,7 @@ public class  PreventaController {
         }
     }
 
-    // --- CRUD Anidado para PropuestaPago ---
-    @GetMapping("/{preventaId}/propuestas-pago")
-    public ResponseEntity<List<PropuestaPago>> listarPropuestasPago(@PathVariable Long preventaId) {
-        Optional<List<PropuestaPago>> propuestasOp = service.listarPropuestasPagoPorPreventa(preventaId);
-        if (propuestasOp.isPresent()) {
-            return ResponseEntity.ok(propuestasOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/{preventaId}/propuestas-pago/{propuestaId}")
-    public ResponseEntity<?> detallePropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId) {
-        Optional<PropuestaPago> propuestaOp = service.porIdPropuestaPago(preventaId, propuestaId);
-        if (propuestaOp.isPresent()) {
-            return ResponseEntity.ok(propuestaOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
+    //  CRUD Anidado para PropuestaPago
 
     @PostMapping("/{preventaId}/propuestas-pago")
     public ResponseEntity<?> crearPropuestaPago(@PathVariable Long preventaId,  @RequestBody PropuestaPago propuesta, BindingResult result) {
@@ -191,6 +171,26 @@ public class  PreventaController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @GetMapping("/{preventaId}/propuestas-pago")
+    public ResponseEntity<List<PropuestaPago>> listarPropuestasPago(@PathVariable Long preventaId) {
+        Optional<List<PropuestaPago>> propuestasOp = service.listarPropuestasPagoPorPreventa(preventaId);
+        if (propuestasOp.isPresent()) {
+            return ResponseEntity.ok(propuestasOp.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
+    @GetMapping("/{preventaId}/propuestas-pago/{propuestaId}")
+    public ResponseEntity<?> detallePropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId) {
+        Optional<PropuestaPago> propuestaOp = service.porIdPropuestaPago(preventaId, propuestaId);
+        if (propuestaOp.isPresent()) {
+            return ResponseEntity.ok(propuestaOp.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
 
     @PutMapping("/{preventaId}/propuestas-pago/{propuestaId}")
     public ResponseEntity<?> editarPropuestaPago(@PathVariable Long preventaId, @PathVariable Long propuestaId, @RequestBody PropuestaPago propuesta, BindingResult result) {

@@ -70,6 +70,7 @@ public class VentaController {
         return ResponseEntity.ok(ventaService.contarVentas());
     }
 
+    // Métodos para manejar la relación entre Venta y DetalleVenta
     @PostMapping("/{ventaId}/detalles")
     public ResponseEntity<?> agregarDetalle(@PathVariable Long ventaId, @RequestBody DetalleVenta detalleVenta) {
         ventaService.agregarDetalle(ventaId, detalleVenta);
@@ -81,6 +82,9 @@ public class VentaController {
         ventaService.eliminarDetalle(ventaId, detalleId);
         return ResponseEntity.noContent().build();
     }
+
+
+    //Metodos remotos para la relacion con Preventa
 
         @PutMapping("/{ventaId}/asignar-preventa/{preventaId}")
     public ResponseEntity<?> asignarPreventa(@PathVariable Long ventaId, @PathVariable Long preventaId) {

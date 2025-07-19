@@ -79,6 +79,8 @@ public class VentaServiceImpl implements VentaService{
         ventaRepository.delete(venta);
     }
 
+
+    // Métodos para manejar la relación entre Venta y DetalleVenta
     @Override
     @Transactional
     public void agregarDetalle(Long ventaId, DetalleVenta detalleVenta) {
@@ -116,6 +118,7 @@ public class VentaServiceImpl implements VentaService{
         ventaRepository.save(venta);
     }
 
+    // Métodos para manejar la relación con Preventa
     @Override
     @Transactional
     public Optional<Venta> asignarPreventa(Long ventaId, Long preventaId) {
@@ -127,23 +130,15 @@ public class VentaServiceImpl implements VentaService{
             }
 
             try {
-                // 1. Validamos que la Preventa existe llamando al otro servicio
+
                 Preventa preventaPojo = preventaClient.getPreventaById(preventaId);
 
-                // =====================================================================
-                // == INICIO: NUEVA REGLA DE NEGOCIO AÑADIDA                          ==
-                // =====================================================================
-                // Solo se puede asignar una preventa si su estado es "APROBADA".
-                // Usamos "APROBADA".equals() para evitar NullPointerException si el estado viniera nulo.
-                if (!"APROBADA".equals(preventaPojo.getEstado())) {
+                  if (!"APROBADA".equals(preventaPojo.getEstado())) {
                     throw new IllegalStateException(
                             "No se puede asignar la Preventa con ID " + preventaId +
                                     ". Su estado es '" + preventaPojo.getEstado() + "', pero se requiere el estado 'APROBADA'."
                     );
                 }
-                // =====================================================================
-                // == FIN: NUEVA REGLA DE NEGOCIO AÑADIDA                             ==
-                // =====================================================================
 
                 System.out.println("Preventa encontrada y aprobada: " + preventaPojo.getId());
 
@@ -153,8 +148,7 @@ public class VentaServiceImpl implements VentaService{
                 throw new RuntimeException("Error de comunicación con el servicio de preventas: " + e.getMessage(), e);
             }
 
-            // 2. Si todas las validaciones pasan, asignamos y guardamos
-            venta.setPreventaId(preventaId);
+             venta.setPreventaId(preventaId);
             return Optional.of(ventaRepository.save(venta));
         }
         return Optional.empty();

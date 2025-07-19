@@ -52,19 +52,11 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Override
     @Transactional
-    public Optional<Preventa> marcarPreventaComoFinalizada(Long preventaId) {
-        Optional<Preventa> opPreventa = repository.findById(preventaId);
-        if (opPreventa.isPresent()) {
-            Preventa preventa = opPreventa.get();
-            try {
-                preventa.marcarComoFinalizado();
-                return Optional.of(repository.save(preventa));
-            } catch (IllegalStateException e) {
-                // Manejar o relanzar la excepción para que el controlador la procese
-                throw e;
-            }
-        }
-        return Optional.empty();
+    public Optional<Preventa> aprobarPreventa(Long preventaId) {
+        return repository.findById(preventaId).map(preventa -> {
+            preventa.aprobarPreventa(); // La lógica está en la entidad
+            return repository.save(preventa);
+        });
     }
 
     // Implementación de CRUD Anidado para ContratoVenta

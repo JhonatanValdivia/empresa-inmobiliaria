@@ -30,43 +30,31 @@ public class DetalleVenta
     @JsonIgnore
     private  Venta venta; //representa la referencia a la Venta a la que pertenece ese DetalleVenta
 
-
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public CronogramaPago getCronogramaPago() {
         return cronogramaPago;
     }
-
     public void setCronogramaPago(CronogramaPago cronogramaPago) {
         this.cronogramaPago = cronogramaPago;
     }
-
     public MetodoPago getMetodoPago() {
         return metodoPago;
     }
-
     public void setMetodoPago(MetodoPago metodoPago) {
         this.metodoPago = metodoPago;
     }
-
     public EstadoDetalle getEstadoDetalle() {
         return estadoDetalle;
     }
-
     public void setEstadoDetalle(EstadoDetalle estadoDetalle) {
         this.estadoDetalle = estadoDetalle;
     }
-
-    public Venta getVenta() {
-        return venta;
-    }
-
+    public Venta getVenta() {return venta;}
     public void setVenta(Venta venta) {
         this.venta = venta;
     }

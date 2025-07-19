@@ -19,7 +19,7 @@ public interface PreventaService {
     Optional<Preventa> porId(Long id);
     Preventa guardar(Preventa preventa);
     void eliminar(Long id);
-    Optional<Preventa> marcarPreventaComoFinalizada(Long preventaId);
+    Optional<Preventa> aprobarPreventa(Long preventaId);
 
     // CRUD Anidado para ContratoVenta (a través de Preventa)
     Optional<ContratoVenta> agregarContratoVenta(Long preventaId, ContratoVenta contrato);
