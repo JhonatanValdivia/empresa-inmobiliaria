@@ -10,7 +10,7 @@ import java.util.Objects;
 public class PrecioVenta
 {
 
-    private BigDecimal precioVenta; //representa decimales exactos y permite operaciones +,-,*,/ sin perder precision
+    private BigDecimal precioVenta;
     private String moneda;
 
     public PrecioVenta(){}

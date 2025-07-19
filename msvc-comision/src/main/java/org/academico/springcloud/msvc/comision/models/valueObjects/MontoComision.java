@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @Embeddable
 public class MontoComision {
-    private BigDecimal montoComision; //representa decimales exactos y permite operaciones +,-,*,/ sin perder precision
+    private BigDecimal montoComision;
     private String moneda;
 
     protected  MontoComision(){}

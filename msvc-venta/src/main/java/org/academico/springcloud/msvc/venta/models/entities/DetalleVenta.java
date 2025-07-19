@@ -23,8 +23,6 @@ public class DetalleVenta
     @Enumerated(EnumType.STRING)
     private EstadoDetalle estadoDetalle;
 
-    //Cuando obtengo un DetalleVenta,
-    //FetchType.LAZY: no cargo la Venta de inmediato, solo si la pido explícitamente (detalle.getVenta()).
     @ManyToOne(fetch = FetchType.LAZY)//N:1
     @JoinColumn(name ="venta_id")//FK que apunta al id de venta
     @JsonIgnore
