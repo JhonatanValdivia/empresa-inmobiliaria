@@ -131,6 +131,22 @@ public class Expediente {
         }
     }
 
+    public void editarPlano(Plano planoEditado) {
+
+
+        for (int i = 0; i < planos.size(); i++) {
+            Plano actual = planos.get(i);
+            if (actual.getIdPlano().equals(planoEditado.getIdPlano())) {
+                planoEditado.setExpediente(this);
+                planos.set(i, planoEditado); // reemplaza el plano existente
+                return;
+            }
+        }
+
+
+    }
+
+
 
 }
 

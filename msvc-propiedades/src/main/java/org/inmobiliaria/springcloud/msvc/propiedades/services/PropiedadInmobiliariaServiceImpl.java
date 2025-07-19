@@ -64,6 +64,16 @@ public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaSe
 
     @Override
     @Transactional
+    public Optional<PropiedadInmobiliaria> editarDocumento(Long propiedadId, DocumentoLegal documento) {
+        return repo.findById(propiedadId).map(p -> {
+            p.editarDocumentoLegal(documento);
+            return repo.save(p);
+        });
+    }
+
+
+    @Override
+    @Transactional
     public Optional<PropiedadInmobiliaria> agregarServicio(Long propiedadId, Servicio servicio) {
         return repo.findById(propiedadId)
                 .map(p -> {
@@ -84,6 +94,15 @@ public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaSe
 
     @Override
     @Transactional
+    public Optional<PropiedadInmobiliaria> editarServicio(Long propiedadId, Servicio servicio) {
+        return repo.findById(propiedadId).map(p -> {
+            p.editarServicio(servicio);
+            return repo.save(p);
+        });
+    }
+
+    @Override
+    @Transactional
     public Optional<PropiedadInmobiliaria> asignarExpediente(Long propiedadId, Expediente expediente) {
         return repo.findById(propiedadId)
                 .map(p -> {
@@ -100,6 +119,15 @@ public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaSe
                     p.desvincularExpediente();
                     return repo.save(p);
                 });
+    }
+
+    @Override
+    @Transactional
+    public Optional<PropiedadInmobiliaria> editarExpediente(Long propiedadId, Expediente expediente) {
+        return repo.findById(propiedadId).map(p -> {
+            p.editarExpediente(expediente);
+            return repo.save(p);
+        });
     }
 
     @Override
@@ -127,6 +155,22 @@ public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaSe
                     return p;
                 });
     }
+
+    @Override
+    @Transactional
+    public Optional<PropiedadInmobiliaria> editarPlano(Long propiedadId, Plano planoEditado) {
+        return repo.findById(propiedadId)
+                .map(p -> {
+                    Expediente expediente = p.getExpediente();
+                    if (expediente != null) {
+                        expediente.editarPlano(planoEditado);
+                        return repo.save(p);
+                    } else {
+                        throw new IllegalStateException("La propiedad no tiene un expediente asignado.");
+                    }
+                });
+    }
+
 
     @Autowired
     private InmobiliariaClientRest inmobiliariaClientRest;

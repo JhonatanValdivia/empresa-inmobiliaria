@@ -75,6 +75,23 @@ public class PropiedadInmobiliariaController {
         }
     }
 
+    @PutMapping("/{id}/documentos/{docId}")
+    public ResponseEntity<PropiedadInmobiliaria> editDocumento(
+            @PathVariable Long id,
+            @PathVariable Long docId,
+            @RequestBody DocumentoLegal documento
+    ) {
+        documento.setIdDocumentoLegal(docId);
+        Optional<PropiedadInmobiliaria> op = service.editarDocumento(id, documento);
+        if (op.isPresent()) {
+            return ResponseEntity.ok(op.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
     @DeleteMapping("/{id}/documentos/{docId}")
     public ResponseEntity<PropiedadInmobiliaria> removeDocumento(
             @PathVariable Long id,
@@ -114,6 +131,21 @@ public class PropiedadInmobiliariaController {
             return ResponseEntity.notFound().build();
         }
     }
+    @PutMapping("/{id}/servicios/{servicioId}")
+    public ResponseEntity<PropiedadInmobiliaria> editServicio(
+            @PathVariable Long id,
+            @PathVariable Long servicioId,
+            @RequestBody Servicio servicio
+    ) {
+        servicio.setIdServicio(servicioId);
+        Optional<PropiedadInmobiliaria> op = service.editarServicio(id, servicio);
+        if (op.isPresent()) {
+            return ResponseEntity.ok(op.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     // Expediente
     @PostMapping("/{id}/expediente")
@@ -141,6 +173,22 @@ public class PropiedadInmobiliariaController {
         }
     }
 
+    @PutMapping("/{id}/expediente/{expedienteId}")
+    public ResponseEntity<PropiedadInmobiliaria> editExpediente(
+            @PathVariable Long id,
+            @PathVariable Long expedienteId,
+            @RequestBody Expediente expediente
+    ) {
+        expediente.setIdExpediente(expedienteId);
+        Optional<PropiedadInmobiliaria> op = service.editarExpediente(id, expediente);
+        if (op.isPresent()) {
+            return ResponseEntity.ok(op.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     // Planos via expediente
     @PostMapping("/{id}/expediente/planos")
     public ResponseEntity<PropiedadInmobiliaria> addPlano(
@@ -167,6 +215,23 @@ public class PropiedadInmobiliariaController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PutMapping("/{id}/expediente/planos/{planoId}")
+    public ResponseEntity<PropiedadInmobiliaria> editPlano(
+            @PathVariable Long id,
+            @PathVariable Long planoId,
+            @RequestBody Plano plano
+    ) {
+        plano.setIdPlano(planoId); // aseguramos que el ID esté bien seteado
+        Optional<PropiedadInmobiliaria> op = service.editarPlano(id, plano);
+
+        if (op.isPresent()) {
+            return ResponseEntity.ok(op.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
 
     //metodos con agregao norma
