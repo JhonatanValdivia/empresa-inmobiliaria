@@ -80,21 +80,9 @@ public class ComisionServiceImpl implements ComisionService {
 
     @Override
     @Transactional
-    public Optional<Venta> obtenerVenta(Long ventaId) {
-        return Optional.ofNullable(ventaClientRest.detalle(ventaId));
-    }
-
-    @Override
-    @Transactional
     public BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision) {
         BigDecimal resultado = tipoComision.calcular(montoBase);
         return resultado.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Comision> listarPorVenta(Long ventaId) {
-        return comisionRepository.findByVentaId(ventaId);
     }
 
     @Override

@@ -21,9 +21,7 @@ public interface ComisionService
     void eliminarComision(Comision comision);
 
     //métodos remotos
-    Optional<Venta> obtenerVenta(Long ventaId);
     BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision);
-    List<Comision> listarPorVenta(Long ventaId);
     void cambiarEstadoComision(Long comisionId, EstadoComision nuevoEstado);
     List<Comision> listarActivas();
 }

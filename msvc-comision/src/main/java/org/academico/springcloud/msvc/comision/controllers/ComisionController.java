@@ -1,17 +1,13 @@
 package org.academico.springcloud.msvc.comision.controllers;
 
-import feign.FeignException;
-import org.academico.springcloud.msvc.comision.models.Venta;
+
 import org.academico.springcloud.msvc.comision.models.entities.Comision;
 import org.academico.springcloud.msvc.comision.models.enums.EstadoComision;
-import org.academico.springcloud.msvc.comision.models.enums.TipoComision;
 import org.academico.springcloud.msvc.comision.services.ComisionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +32,6 @@ public class ComisionController {
         }
         return ResponseEntity.notFound().build();
     }
-
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Comision comision) {
         try {
@@ -46,7 +41,6 @@ public class ComisionController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@RequestBody Comision comision, @PathVariable Long id) {
         Optional<Comision> comisionOp = comisionService.porId(id);
@@ -70,37 +64,9 @@ public class ComisionController {
         }
         return ResponseEntity.notFound().build();
     }
-    @GetMapping("/calcular")
-    public ResponseEntity<?> calcularComision(@RequestParam BigDecimal montoBase,
-                                              @RequestParam TipoComision tipoComision) {
-        try {
-            BigDecimal comisionCalculada = comisionService.calcularComision(montoBase, tipoComision);
-            return ResponseEntity.ok(Collections.singletonMap("comision", comisionCalculada));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        }
-    }
     @GetMapping("/contar")
     public ResponseEntity<?> contarComisiones() {
         return ResponseEntity.ok(comisionService.contarComisiones());
-    }
-
-    @GetMapping("/venta/{ventaId}")
-    public ResponseEntity<?> obtenerVenta(@PathVariable Long ventaId) {
-
-        try {
-            Optional<Venta> venta = comisionService.obtenerVenta(ventaId);
-            if (venta.isPresent()) {
-                return ResponseEntity.ok(venta.get());
-            }
-            return ResponseEntity.notFound().build();
-        } catch (FeignException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("Mensaje", "Error al consultar la venta " + e.getMessage()));
-        }
-    }
-    @GetMapping("/venta/{ventaId}/listar")
-    public ResponseEntity<?> listarPorVenta(@PathVariable Long ventaId) {
-        return ResponseEntity.ok(comisionService.listarPorVenta(ventaId));
     }
 
     @PutMapping("/{comisionId}/estado")
@@ -108,7 +74,6 @@ public class ComisionController {
         comisionService.cambiarEstadoComision(comisionId, estado);
         return ResponseEntity.ok(Collections.singletonMap("mensaje", "Estado actualizado"));
     }
-
     @GetMapping("/activas")
     public ResponseEntity<?> listarActivas() {
         return ResponseEntity.ok(comisionService.listarActivas());
@@ -125,7 +90,6 @@ public class ComisionController {
         }
         return ResponseEntity.notFound().build();
     }
-
     @GetMapping("/{comisionId}/verificar-pago")
     public ResponseEntity<?> verificarPago(@PathVariable Long comisionId) {
         Optional<Comision> comisionOp = comisionService.porId(comisionId);

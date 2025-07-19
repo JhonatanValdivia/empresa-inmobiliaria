@@ -24,7 +24,7 @@ public class Venta
     @Enumerated(EnumType.STRING)
     private EstadoVenta estado;
 
-    @Embedded //Marca un campo en una clase de entidad como un objeto incrustado
+    @Embedded //Marca un campo en una clase entidad como un objeto incrustado
     private FechaVenta fecha; //OV
 
     @Embedded
@@ -40,7 +40,7 @@ public class Venta
 
     //mappedBy: hace referencia a que la relación está mapeada en el lado de DetalleVenta por el atributo llamado venta
     @OneToMany(mappedBy = "venta",cascade = CascadeType.ALL, orphanRemoval = true)//relacion 1:M---> bidireccional
-    private List<DetalleVenta> detalleVentaLista; //representa la lista de todos los DetalleVenta asociados a una Venta específica.
+    private List<DetalleVenta> detalleVentaLista; //representa la lista de todos los DetalleVenta asociados a una Venta específica
 
     public Venta() {
         detalleVentaLista= new ArrayList<>();
