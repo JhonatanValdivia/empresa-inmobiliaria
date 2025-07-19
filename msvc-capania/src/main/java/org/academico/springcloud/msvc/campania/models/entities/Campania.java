@@ -45,10 +45,6 @@ public class Campania {
             throw new IllegalStateException("No se puede crear la campaña sin al menos un proveedor.");
         }
         this.estado = EstadoCampania.ACTIVA;
-        // Inicializar monto con 5 si es null
-        if (this.monto == null || this.monto.compareTo(BigDecimal.valueOf(5)) < 0) {
-            this.monto = BigDecimal.valueOf(5);
-        }
     }
 
     public void aprobarMonto(BigDecimal nuevoMonto) {

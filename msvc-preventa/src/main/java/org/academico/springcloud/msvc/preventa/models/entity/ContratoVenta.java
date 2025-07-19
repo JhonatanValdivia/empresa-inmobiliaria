@@ -23,7 +23,7 @@ public class ContratoVenta {
     private String estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "preventa_id")
+    @JoinColumn(name = "preventa_id",unique = true)
     @JsonBackReference // AÑADIDO: Este lado no serializará el objeto Preventa para evitar el bucle
     private Preventa preventa;
 

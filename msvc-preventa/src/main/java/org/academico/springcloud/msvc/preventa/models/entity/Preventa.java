@@ -26,9 +26,9 @@ public class Preventa {
     @Enumerated(EnumType.STRING)
     private EstadoPreventa estado; // "EnEvaluacion", "Aprobada", "Cancelada", "Finalizada"
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "preventa")
-    @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de los contratos
-    private List<ContratoVenta> contratosVenta;
+    @OneToOne(mappedBy = "preventa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private ContratoVenta contratoVenta;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "preventa")
     @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de las propuestas
@@ -41,7 +41,7 @@ public class Preventa {
     public Preventa() {
             this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
         this.fechaInicio = LocalDate.now();
-        this.contratosVenta = new ArrayList<>();
+        this.contratoVenta = null; // Inicialmente no hay contrato
         this.propuestasPago = new ArrayList<>();
         this.visitasProgramadas = new ArrayList<>();
     }
@@ -70,12 +70,12 @@ public class Preventa {
         this.estado = estado;
     }
 
-    public List<ContratoVenta> getContratosVenta() {
-        return contratosVenta;
+    public ContratoVenta getContratoVenta() {
+        return contratoVenta;
     }
 
-    public void setContratosVenta(List<ContratoVenta> contratosVenta) {
-        this.contratosVenta = contratosVenta;
+    public void setContratoVenta(ContratoVenta contratoVenta) {
+        this.contratoVenta = contratoVenta;
     }
 
     public List<PropuestaPago> getPropuestasPago() {
@@ -105,14 +105,17 @@ public class Preventa {
         return visita;
     }
 
+    // --- MÉTODOS DE NEGOCIO MODIFICADOS ---
     public ContratoVenta registrarContrato(TipoContrato tipoContrato, LocalDate fechaFirma) {
+        if (this.contratoVenta != null) {
+            throw new IllegalStateException("Esta preventa ya tiene un contrato registrado.");
+        }
         ContratoVenta contrato = new ContratoVenta();
         contrato.setTipoContrato(tipoContrato);
         contrato.setFechaFirma(fechaFirma);
-        contrato.setEstado("Firmado"); // Estado inicial al registrar el contrato
+        contrato.setEstado("Firmado");
         contrato.setPreventa(this); // Asegura la relación bidireccional
-        this.contratosVenta.add(contrato);
-        System.out.println("Contrato de tipo " + tipoContrato + " firmado para la preventa " + this.id);
+        this.contratoVenta = contrato;
         return contrato;
     }
 
@@ -127,36 +130,19 @@ public class Preventa {
         return pago;
     }
 
-    public BigDecimal calcularComision() {
-        BigDecimal totalContratos = this.contratosVenta.stream()
-                .filter(c -> "Firmado".equals(c.getEstado()))
-                .map(c -> BigDecimal.valueOf(100000)) // Ejemplo de monto fijo
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal comision = totalContratos.multiply(BigDecimal.valueOf(0.01));
-        System.out.println("Comisión calculada para la preventa " + this.id + ": " + comision);
-        return comision;
-    }
+
 
     public void marcarComoFinalizado() {
-        boolean hasSignedContract = this.contratosVenta.stream()
-                .anyMatch(c -> "Firmado".equals(c.getEstado()));
+        // La lógica ahora es más simple
+        boolean hasSignedContract = this.contratoVenta != null && "Firmado".equals(this.contratoVenta.getEstado());
         if (hasSignedContract && this.estado != EstadoPreventa.CANCELADA) {
             this.estado = EstadoPreventa.FINALIZADA;
-            System.out.println("Preventa " + this.id + " marcada como finalizada.");
         } else {
-            throw new IllegalStateException("La preventa " + this.id + " no puede ser finalizada en su estado actual o sin un contrato firmado.");
+            throw new IllegalStateException("La preventa no puede ser finalizada sin un contrato firmado.");
         }
     }
 
-    public void addContratoVenta(ContratoVenta contrato) {
-        this.contratosVenta.add(contrato);
-        contrato.setPreventa(this);
-    }
 
-    public void removeContratoVenta(ContratoVenta contrato) {
-        this.contratosVenta.remove(contrato);
-        contrato.setPreventa(null);
-    }
 
     public void addPropuestaPago(PropuestaPago propuesta) {
         this.propuestasPago.add(propuesta);
@@ -191,11 +177,6 @@ public class Preventa {
         return Objects.hash(id);
     }
 
-    public Optional<ContratoVenta> findContratoById(Long contratoId) {
-        return this.contratosVenta.stream()
-                .filter(c -> Objects.equals(c.getId(), contratoId))
-                .findFirst();
-    }
 
     public Optional<PropuestaPago> findPropuestaPagoById(Long propuestaId) {
         return this.propuestasPago.stream()
