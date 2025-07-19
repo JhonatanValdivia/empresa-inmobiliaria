@@ -1,6 +1,7 @@
 package org.academico.springcloud.msvc.campania.controllers;
 
 import feign.FeignException;
+import org.academico.springcloud.msvc.campania.models.Propiedad;
 import org.academico.springcloud.msvc.campania.models.entities.Campania;
 import org.academico.springcloud.msvc.campania.models.entities.ProveedorPublicidad;
 import org.academico.springcloud.msvc.campania.services.CampaniaService;
@@ -67,18 +68,37 @@ public class CampaniaController {
                 boolean proveedorExiste = service.listar().stream()
                         .flatMap(c -> c.getProveedores().stream())
                         .anyMatch(p -> p.getIdProveedor() != null && p.getIdProveedor().equals(proveedor.getIdProveedor()));
-
                 if (!proveedorExiste) {
                     return ResponseEntity.badRequest().body("El proveedor con ID " + proveedor.getIdProveedor() + " no existe.");
                 }
             }
         }
 
-        // Validar que el monto, si se proporciona, sea al menos 5
-        if (campania.getMonto() != null && campania.getMonto().compareTo(BigDecimal.valueOf(5)) < 0) {
+        // Validar que el monto sea obligatorio y al menos 5
+        if (campania.getMonto() == null) {
+            return ResponseEntity.badRequest().body("El monto es obligatorio para crear la campaña.");
+        }
+        if (campania.getMonto().compareTo(BigDecimal.valueOf(5)) < 0) {
             return ResponseEntity.badRequest().body("El monto debe ser al menos 5.");
         }
 
+        // Validar que la propiedad exista
+        if (campania.getIdPropiedad() != null) {
+            try {
+                Propiedad propiedad = service.getPropiedadClient().detalle(campania.getIdPropiedad());
+                if (propiedad == null) {
+                    return ResponseEntity.status(404).body("La propiedad con ID " + campania.getIdPropiedad() + " no existe.");
+                }
+            } catch (FeignException e) {
+                if (e.status() == 404) {
+                    return ResponseEntity.status(404).body("La propiedad con ID " + campania.getIdPropiedad() + " no existe.");
+                } else {
+                    return ResponseEntity.status(503).body("Error de conexión con msvc-propiedades: " + e.getMessage());
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body("Error interno al validar la propiedad: " + e.getMessage());
+            }
+        }
         try {
             campania.crearCampania();
             Campania nuevaCampania = service.guardar(campania);
@@ -178,9 +198,9 @@ public class CampaniaController {
         }
 
         try {
-            proveedor.eliminarProveedor(); // Tu lógica actual
-            campania.getProveedores().remove(proveedor); // Lo quitamos de la lista
-            service.guardar(campania); // Hibernate lo elimina por cascade + orphanRemoval
+            proveedor.eliminarProveedor();
+            campania.getProveedores().remove(proveedor);
+            service.guardar(campania);
             return ResponseEntity.ok("Proveedor eliminado exitosamente");
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
