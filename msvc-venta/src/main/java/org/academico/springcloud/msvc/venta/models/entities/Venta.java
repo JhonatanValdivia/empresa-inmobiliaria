@@ -18,29 +18,28 @@ public class Venta
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)// para que la BD  guarde como texto y no como número
+    @Enumerated(EnumType.STRING)
     private TipoVenta tipoVenta;
 
     @Enumerated(EnumType.STRING)
     private EstadoVenta estado;
 
-    @Embedded //Marca un campo en una clase entidad como un objeto incrustado
+    @Embedded
     private FechaVenta fecha; //OV
 
     @Embedded
     @AttributeOverride(name = "precioVenta", column = @Column(name = "precio_valor"))
     private PrecioVenta precioVenta; //OV
 
-    //AÑADIDO: Este campo es para almacenar el ID de la Preventa asociada a esta Venta.
+    //AÑADIDO: Este campo es para almacenar el ID de la Preventa asociada a esta Venta
     @Column(unique = true)
     private Long preventaId;
     @Transient
-    private Preventa DetallePreventa; //Este campo es para los datos completos de Preventa obtenidos vía API.
+    private Preventa DetallePreventa; //Este campo es para los datos completos de Preventa obtenidos vía API
 
-    //AÑADIDO: Relación con DetalleVenta
-    //mappedBy: hace referencia a que la relación está mapeada en el lado de DetalleVenta por el atributo llamado venta
+    //AÑADIDO: Relación con DetalleVentaa
     @OneToMany(mappedBy = "venta",cascade = CascadeType.ALL, orphanRemoval = true)//relacion 1:M---> bidireccional
-    private List<DetalleVenta> detalleVentaLista; //representa la lista de todos los DetalleVenta asociados a una Venta específica
+    private List<DetalleVenta> detalleVentaLista;
 
     public Venta() {
         detalleVentaLista= new ArrayList<>();

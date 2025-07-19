@@ -7,7 +7,7 @@ import jakarta.persistence.Embeddable;
 import java.time.LocalDate;
 import java.util.Objects;
 
-@Embeddable // indica que la clase se puede integrar en una entidad y no tiene su propia identidad independiente
+@Embeddable
 public class FechaVenta
 {
     private  int dia;

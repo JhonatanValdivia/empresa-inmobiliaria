@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.venta.models.valueObjects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -17,22 +19,25 @@ public class CronogramaPago
     @Enumerated(EnumType.STRING)
     private FrecuenciaPago frecuencia;
 
-    public CronogramaPago(){}
-    public CronogramaPago(LocalDate fechaInicio, int numeroCuotas, FrecuenciaPago frecuencia) {
+    protected CronogramaPago(){}
+    @JsonCreator
+    public CronogramaPago(@JsonProperty("fechaInicio") LocalDate fechaInicio,
+                          @JsonProperty("numeroCuotas") int numeroCuotas,
+                          @JsonProperty("frecuencia") FrecuenciaPago frecuencia) {
 
-        if(fechaInicio==null){
-            throw  new IllegalArgumentException("La fecha de inicio no puede ser nula");
+        if (fechaInicio == null) {
+            throw new IllegalArgumentException("La fecha de inicio no puede ser nula");
         }
-        if(fechaInicio.isBefore(LocalDate.now())){
+        if (fechaInicio.isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("La fecha de inicio no puede ser pasada");
         }
-        if(numeroCuotas<0){
-            throw new IllegalArgumentException("El número de cuotas debe ser mayor a cero");
-
+        if (numeroCuotas <= 0) {
+            throw new IllegalArgumentException("El número de cuotas debe ser mayor que cero");
         }
-        if(frecuencia==null){
+        if (frecuencia == null) {
             throw new IllegalArgumentException("La frecuencia no puede ser nula o vacía");
         }
+
         this.fechaInicio = fechaInicio;
         this.numeroCuotas = numeroCuotas;
         this.frecuencia = frecuencia;
