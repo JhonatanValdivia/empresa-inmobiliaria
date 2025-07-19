@@ -38,7 +38,7 @@ public interface PropiedadInmobiliariaService {
     //relacion con el agregado nomrma
     Optional<Norma> asignarNorma(Norma norma, Long propiedadId);
     Optional<Norma> eliminarNorma(Norma norma, Long propiedadId);
-    Optional<Norma> crearNorma(Norma norma, Long propiedadId);
+
 
     List<PropiedadInmobiliaria> listarNormas();
 
