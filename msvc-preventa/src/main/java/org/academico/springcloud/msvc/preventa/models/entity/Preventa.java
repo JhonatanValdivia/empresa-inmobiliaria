@@ -42,8 +42,15 @@ public class Preventa {
     @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de las visitas
     private List<VisitaProgramada> visitasProgramadas;
 
+    //relación con Usuario(agente y cliente)
+    @Column(name="agente_id",unique = true)
+    private Long usuarioAgenteId;
+
+    @Column(name = "cliente_id",unique=true)
+    private Long usuarioClienteId;
+
     public Preventa() {
-            this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
+        this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
         this.fechaInicio = LocalDate.now();
         this.contratoVenta = null; // Inicialmente no hay contrato
         this.propuestasPago = new ArrayList<>();
@@ -85,6 +92,21 @@ public class Preventa {
     }
     public void setVisitasProgramadas(List<VisitaProgramada> visitasProgramadas) {this.visitasProgramadas = visitasProgramadas;}
 
+    public Long getUsuarioAgenteId() {
+        return usuarioAgenteId;
+    }
+
+    public void setUsuarioAgenteId(Long usuarioAgenteId) {
+        this.usuarioAgenteId = usuarioAgenteId;
+    }
+
+    public Long getUsuarioClienteId() {
+        return usuarioClienteId;
+    }
+
+    public void setUsuarioClienteId(Long usuarioClienteId) {
+        this.usuarioClienteId = usuarioClienteId;
+    }
 
     public void aprobarPreventa() {
         if (this.estado != EstadoPreventa.EN_EVALUACION) {
@@ -94,14 +116,12 @@ public class Preventa {
         System.out.println("Preventa " + this.id + " marcada como APROBADA.");
     }
 
-
-
     public void addPropuestaPago(PropuestaPago propuesta) {
         this.propuestasPago.add(propuesta);
         propuesta.setPreventa(this);
     }
 
-        public void addVisitaProgramada(VisitaProgramada visita) {
+    public void addVisitaProgramada(VisitaProgramada visita) {
         this.visitasProgramadas.add(visita);
         visita.setPreventa(this);
     }

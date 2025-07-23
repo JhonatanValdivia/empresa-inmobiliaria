@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.preventa.services;
 
+import org.academico.springcloud.msvc.preventa.clients.UsuarioClientsRest;
+import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
@@ -9,19 +11,29 @@ import org.academico.springcloud.msvc.preventa.models.enums.MetodoPago;
 import org.academico.springcloud.msvc.preventa.models.enums.TipoContrato;
 import org.academico.springcloud.msvc.preventa.repositories.PreventaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PreventaServiceImpl implements PreventaService {
 
     @Autowired
     private PreventaRepository repository;
+
+    @Autowired
+    private UsuarioClientsRest usuarioClientRest;
 
     @Override
     @Transactional(readOnly = true)
@@ -268,5 +280,27 @@ public class PreventaServiceImpl implements PreventaService {
             }
         }
         return Optional.empty();
+    }
+
+    //metodo relación Preventa con Usuarios
+    @Override
+    @Transactional
+    public Preventa asociarUsuariosPreventa(Long idPreventa, Long idAgente, Long idCliente) {
+        Usuario agente = usuarioClientRest.detalleUsuario(idAgente);
+        if (agente.getTipoUsuario()!= Usuario.TipoUsuario.AGENTE) {
+            throw new IllegalArgumentException("El usuario no es un agente válido");
+        }
+
+        Usuario cliente = usuarioClientRest.detalleUsuario(idCliente);
+        if (cliente.getTipoUsuario()!= Usuario.TipoUsuario.CLIENTE) {
+            throw new IllegalArgumentException("El usuario no es un cliente válido");
+        }
+
+        Preventa preventa = repository.findById(idPreventa)
+                .orElseThrow(() -> new IllegalArgumentException("Preventa no encontrada"));
+
+        preventa.setUsuarioAgenteId(idAgente);
+        preventa.setUsuarioClienteId(idCliente);
+        return repository.save(preventa);
     }
 }

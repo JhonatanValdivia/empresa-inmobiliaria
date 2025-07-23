@@ -42,4 +42,7 @@ public interface PreventaService {
     Optional<VisitaProgramada> actualizarVisitaProgramada(Long preventaId, Long visitaId, VisitaProgramada visitaActualizada);
     Optional<VisitaProgramada> reprogramarVisitaPreventa(Long preventaId, Long visitaId, LocalDate fecha); // Método de negocio
     Optional<VisitaProgramada> actualizarEstadoVisitaPreventa(Long preventaId, Long visitaId, EstadoVisita estadoVisita     ); // Método de negocio
+
+    //relacion con el microservicio Usuarios
+    Preventa asociarUsuariosPreventa(Long idPreventa, Long idAgente, Long idCliente);
 }

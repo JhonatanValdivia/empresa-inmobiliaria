@@ -288,4 +288,14 @@ public class  PreventaController {
                 .collect(Collectors.toMap(err -> err.getField(), err -> err.getDefaultMessage()));
         return ResponseEntity.badRequest().body(errores);
     }
+    //Metodo para asociar usuarios a la preventa(agente y cliente)
+    @PutMapping("/{idPreventa}/asociar-usuarios")
+    public  ResponseEntity<?> ascoarUsuarios(@PathVariable Long idPreventa,@RequestParam Long idAgente, @RequestParam Long idCliente){
+        try{
+            Preventa preventaUsuarios=service.asociarUsuariosPreventa(idPreventa,idAgente,idCliente);
+            return ResponseEntity.ok(preventaUsuarios);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error",e.getMessage()));
+        }
+    }
 }
