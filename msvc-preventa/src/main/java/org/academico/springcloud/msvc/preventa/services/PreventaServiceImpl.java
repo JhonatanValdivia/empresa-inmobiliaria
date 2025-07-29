@@ -1,30 +1,22 @@
 package org.academico.springcloud.msvc.preventa.services;
 
+import org.academico.springcloud.msvc.preventa.clients.PropiedadClientRest;
 import org.academico.springcloud.msvc.preventa.clients.UsuarioClientsRest;
+import org.academico.springcloud.msvc.preventa.models.PropiedadInmobiliaria;
 import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
 import org.academico.springcloud.msvc.preventa.models.entity.VisitaProgramada;
 import org.academico.springcloud.msvc.preventa.models.enums.EstadoVisita;
-import org.academico.springcloud.msvc.preventa.models.enums.MetodoPago;
-import org.academico.springcloud.msvc.preventa.models.enums.TipoContrato;
 import org.academico.springcloud.msvc.preventa.repositories.PreventaRepository;
+import org.academico.springcloud.msvc.preventa.models.enums.enumsPropiedades.EstadoPropiedad;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class PreventaServiceImpl implements PreventaService {
@@ -34,6 +26,9 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Autowired
     private UsuarioClientsRest usuarioClientRest;
+
+    @Autowired
+    private PropiedadClientRest propiedadClientRest;
 
     @Override
     @Transactional(readOnly = true)
@@ -49,7 +44,20 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Override
     @Transactional
-    public Preventa guardar(Preventa preventa) {
+    public Preventa guardar(Preventa preventa, Long idPropiedad) {
+        // Verificar si la propiedad existe y está disponible
+        PropiedadInmobiliaria propiedad = propiedadClientRest.detallePropiedad(idPropiedad);
+        if (propiedad == null) {
+            throw new IllegalArgumentException("Propiedad no encontrada con ID: " + idPropiedad);
+        }
+        if (propiedad.getEstado() == null || !propiedad.getEstado().equals(EstadoPropiedad.DISPONIBLE)) {
+            throw new IllegalArgumentException("La propiedad con ID " + idPropiedad + " no está disponible");
+        }
+
+        // Asignar el idPropiedad a la preventa
+        preventa.setPropiedadId(idPropiedad);
+
+        // Guardar la preventa
         return repository.save(preventa);
     }
 
@@ -301,6 +309,24 @@ public class PreventaServiceImpl implements PreventaService {
 
         preventa.setUsuarioAgenteId(idAgente);
         preventa.setUsuarioClienteId(idCliente);
+        return repository.save(preventa);
+    }
+
+    @Override
+    @Transactional
+    public Preventa asociarPropiedadPreventa(Long idPreventa, Long idPropiedad) {
+        // Verificar si la propiedad existe
+        PropiedadInmobiliaria propiedad = propiedadClientRest.detallePropiedad(idPropiedad);
+        if (propiedad == null) {
+            throw new IllegalArgumentException("Propiedad no encontrada con ID: " + idPropiedad);
+        }
+
+        // Obtener la preventa
+        Preventa preventa = repository.findById(idPreventa)
+                .orElseThrow(() -> new IllegalArgumentException("Preventa no encontrada con ID: " + idPreventa));
+
+        // Asociar la propiedad (solo el ID por ahora)
+        preventa.setPropiedadId(idPropiedad);
         return repository.save(preventa);
     }
 }

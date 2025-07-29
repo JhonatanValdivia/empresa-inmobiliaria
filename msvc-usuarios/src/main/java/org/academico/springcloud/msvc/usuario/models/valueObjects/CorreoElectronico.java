@@ -3,8 +3,6 @@ package org.academico.springcloud.msvc.usuario.models.valueObjects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 
 import java.util.Objects;
 
@@ -23,8 +21,9 @@ public class CorreoElectronico {
         if (valorCorreo == null || valorCorreo.trim().isEmpty()) {
             throw new IllegalArgumentException("El valor del correo no puede ser vacío.");
         }
-        dominio = dominio.trim().toLowerCase();
-        valorCorreo = valorCorreo.trim().toLowerCase();
+
+        this.dominio = dominio.trim().toLowerCase();
+        this.valorCorreo = valorCorreo.trim().toLowerCase();
 
         String correoCompleto = valorCorreo + "@" + dominio;
         if (correoCompleto.length() > 254) {
@@ -33,9 +32,6 @@ public class CorreoElectronico {
         if (!correoCompleto.matches("^[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,}$")) {
             throw new IllegalArgumentException("Formato de correo inválido.");
         }
-
-        this.dominio = dominio;
-        this.valorCorreo = valorCorreo;
     }
 
     public String getDominio() {
@@ -51,13 +47,12 @@ public class CorreoElectronico {
         if (this == object) return true;
         if (!(object instanceof CorreoElectronico)) return false;
         CorreoElectronico correo = (CorreoElectronico) object;
-        return dominio.equals(correo.dominio) &&
-                valorCorreo.equals(correo.valorCorreo);
+        return dominio.equals(correo.dominio) && valorCorreo.equals(correo.valorCorreo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dominio,valorCorreo);
+        return Objects.hash(dominio, valorCorreo);
     }
 
     @Override

@@ -2,9 +2,11 @@ package org.academico.springcloud.msvc.preventa.models.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference; // Importar esta
 import jakarta.persistence.*;
+import org.academico.springcloud.msvc.preventa.models.PropiedadInmobiliaria;
 import org.academico.springcloud.msvc.preventa.models.enums.EstadoPreventa;
 import org.academico.springcloud.msvc.preventa.models.enums.MetodoPago;
 import org.academico.springcloud.msvc.preventa.models.enums.TipoContrato;
+import org.antlr.v4.runtime.misc.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -49,6 +51,14 @@ public class Preventa {
     @Column(name = "cliente_id",unique=true)
     private Long usuarioClienteId;
 
+    // Campo para la propiedad
+    @Column(name = "propiedad_id")
+    @NotNull
+    private Long propiedadId;
+
+    @Transient
+    private PropiedadInmobiliaria propiedad;
+
     public Preventa() {
         this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
         this.fechaInicio = LocalDate.now();
@@ -84,29 +94,27 @@ public class Preventa {
     public List<PropuestaPago> getPropuestasPago() {
         return propuestasPago;
     }
-    public void setPropuestasPago(List<PropuestaPago> propuestasPago) {
-        this.propuestasPago = propuestasPago;
-    }
+    public void setPropuestasPago(List<PropuestaPago> propuestasPago) {this.propuestasPago = propuestasPago;}
     public List<VisitaProgramada> getVisitasProgramadas() {
         return visitasProgramadas;
     }
     public void setVisitasProgramadas(List<VisitaProgramada> visitasProgramadas) {this.visitasProgramadas = visitasProgramadas;}
-
     public Long getUsuarioAgenteId() {
         return usuarioAgenteId;
     }
-
     public void setUsuarioAgenteId(Long usuarioAgenteId) {
         this.usuarioAgenteId = usuarioAgenteId;
     }
-
     public Long getUsuarioClienteId() {
         return usuarioClienteId;
     }
-
     public void setUsuarioClienteId(Long usuarioClienteId) {
         this.usuarioClienteId = usuarioClienteId;
     }
+    public Long getPropiedadId() {return propiedadId;}
+    public void setPropiedadId(Long propiedadId) {this.propiedadId = propiedadId;}
+    public PropiedadInmobiliaria getPropiedad() {return propiedad;}
+    public void setPropiedad(PropiedadInmobiliaria propiedad) {this.propiedad = propiedad;}
 
     public void aprobarPreventa() {
         if (this.estado != EstadoPreventa.EN_EVALUACION) {

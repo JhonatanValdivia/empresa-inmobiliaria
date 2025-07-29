@@ -17,7 +17,7 @@ public interface PreventaService {
     // CRUD para Preventa (Agregado Raíz)
     List<Preventa> listar();
     Optional<Preventa> porId(Long id);
-    Preventa guardar(Preventa preventa);
+    Preventa guardar(Preventa preventa, Long idPropiedad);
     void eliminar(Long id);
     Optional<Preventa> aprobarPreventa(Long preventaId);
 
@@ -45,4 +45,7 @@ public interface PreventaService {
 
     //relacion con el microservicio Usuarios
     Preventa asociarUsuariosPreventa(Long idPreventa, Long idAgente, Long idCliente);
+
+    //Relación con el microservicio Propiedades
+    Preventa asociarPropiedadPreventa(Long idPreventa, Long idPropiedad);
 }

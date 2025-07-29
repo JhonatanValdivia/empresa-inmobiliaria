@@ -1,32 +1,16 @@
-package org.academico.springcloud.msvc.usuario.models.entities;
+package org.academico.springcloud.msvc.comision.models;
 
-import jakarta.persistence.*;
-import org.academico.springcloud.msvc.usuario.models.enums.TipoUsuario;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.CorreoElectronico;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.Direccion;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.NombreCompleto;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.Telefono;
+import org.academico.springcloud.msvc.comision.models.valueObjects.valueObjectsUsuarios.CorreoElectronico;
+import org.academico.springcloud.msvc.comision.models.valueObjects.valueObjectsUsuarios.Direccion;
+import org.academico.springcloud.msvc.comision.models.valueObjects.valueObjectsUsuarios.NombreCompleto;
+import org.academico.springcloud.msvc.comision.models.valueObjects.valueObjectsUsuarios.Telefono;
 
-@Entity
-@Table(name = "usuarios")
 public class Usuario {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Embedded
     private NombreCompleto nombreCompleto;
-
-    @Enumerated(EnumType.STRING)
-    private TipoUsuario tipoUsuario;
-
-    @Embedded
+    private String tipoUsuario;
     private Telefono telefono;
-
-    @Embedded
     private CorreoElectronico correoElectronico;
-
-    @Embedded
     private Direccion direccion;
 
     // Getters y Setters
@@ -46,11 +30,11 @@ public class Usuario {
         this.nombreCompleto = nombreCompleto;
     }
 
-    public TipoUsuario getTipoUsuario() {
+    public String getTipoUsuario() {
         return tipoUsuario;
     }
 
-    public void setTipoUsuario(TipoUsuario tipoUsuario) {
+    public void setTipoUsuario(String tipoUsuario) {
         this.tipoUsuario = tipoUsuario;
     }
 
@@ -75,17 +59,6 @@ public class Usuario {
     }
 
     public void setDireccion(Direccion direccion) {
-        this.direccion = direccion;
-    }
-
-    public void asignarRol(TipoUsuario rol) {
-        this.tipoUsuario = rol;
-    }
-
-    public void actualizarDatos(NombreCompleto nombre, Telefono telefono, CorreoElectronico correo, Direccion direccion) {
-        this.nombreCompleto = nombre;
-        this.telefono = telefono;
-        this.correoElectronico = correo;
         this.direccion = direccion;
     }
 }

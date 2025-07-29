@@ -1,4 +1,4 @@
-package org.inmobiliaria.springcloud.msvc.propiedades.models.enums;
+package org.academico.springcloud.msvc.preventa.models.enums.enumsPropiedades;
 
 public enum TipoServicio {
     ELECTRICIDAD,

@@ -11,8 +11,7 @@ public class NombreCompleto {
     private String primerApellido;
     private String segundoApellido;
 
-    protected NombreCompleto() {
-    }
+    protected NombreCompleto() {}
 
     @JsonCreator
     public NombreCompleto(@JsonProperty("primerNombre") String primerNombre, @JsonProperty("segundoNombre") String segundoNombre,
@@ -24,26 +23,21 @@ public class NombreCompleto {
             throw new IllegalArgumentException("El primer apellido es obligatorio.");
         }
 
-        primerNombre = primerNombre.trim().replaceAll("\\s{2,}", " ");
-        segundoNombre = (segundoNombre != null) ? segundoNombre.trim().replaceAll("\\s{2,}", " ") : "";
-        primerApellido = primerApellido.trim().replaceAll("\\s{2,}", " ");
-        segundoApellido = (segundoApellido != null) ? segundoApellido.trim().replaceAll("\\s{2,}", " ") : "";
+        this.primerNombre = primerNombre.trim().replaceAll("\\s{2,}", " ");
+        this.segundoNombre = (segundoNombre != null) ? segundoNombre.trim().replaceAll("\\s{2,}", " ") : "";
+        this.primerApellido = primerApellido.trim().replaceAll("\\s{2,}", " ");
+        this.segundoApellido = (segundoApellido != null) ? segundoApellido.trim().replaceAll("\\s{2,}", " ") : "";
 
-        if (primerNombre.length() > 50 || segundoNombre.length() > 50 || primerApellido.length() > 50 || segundoApellido.length() > 50) {
+        if (primerNombre.length() > 50 || (segundoNombre != null && segundoNombre.length() > 50) ||
+                primerApellido.length() > 50 || (segundoApellido != null && segundoApellido.length() > 50)) {
             throw new IllegalArgumentException("Cada parte del nombre debe tener como máximo 50 caracteres.");
         }
 
         String regex = "^[A-Za-zÁÉÍÓÚáéíóúÑñÜü'\\- ]+$";
-
         if (!primerNombre.matches(regex) || (!segundoNombre.isEmpty() && !segundoNombre.matches(regex)) ||
                 !primerApellido.matches(regex) || (!segundoApellido.isEmpty() && !segundoApellido.matches(regex))) {
             throw new IllegalArgumentException("El nombre solo puede contener letras, espacios, guiones y tildes.");
         }
-
-        this.primerNombre = primerNombre;
-        this.segundoNombre = segundoNombre;
-        this.primerApellido = primerApellido;
-        this.segundoApellido = segundoApellido;
     }
 
     public String getPrimerNombre() {
@@ -81,7 +75,6 @@ public class NombreCompleto {
     @Override
     public String toString() {
         return String.join(" ", primerNombre, segundoNombre.isEmpty() ? "" : segundoNombre, primerApellido,
-                segundoApellido.isEmpty() ? "" : segundoApellido
-        ).replaceAll("\\s{2,}", " ").trim();
+                segundoApellido.isEmpty() ? "" : segundoApellido).replaceAll("\\s{2,}", " ").trim();
     }
 }

@@ -3,7 +3,6 @@ package org.academico.springcloud.msvc.usuario.models.valueObjects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.NotBlank;
 
 import java.util.Objects;
 
@@ -12,30 +11,23 @@ public class Telefono {
     private String numero;
     private String codigoPais;
 
-    protected Telefono() {
-    }
+    protected Telefono() {}
 
     @JsonCreator
     public Telefono(@JsonProperty("numero") String numero, @JsonProperty("codigoPais") String codigoPais) {
-        if (codigoPais == null || codigoPais.trim().isEmpty()) {
-            throw new IllegalArgumentException("El código de país es obligatorio.");
-        }
         if (numero == null || numero.trim().isEmpty()) {
             throw new IllegalArgumentException("El número es obligatorio.");
         }
 
-        codigoPais = codigoPais.trim();
-        numero = numero.trim().replaceAll("[^\\d]", "");
+        this.numero = numero.trim().replaceAll("[^\\d]", "");
+        this.codigoPais = (codigoPais != null) ? codigoPais.trim() : null;
 
-        if (!codigoPais.matches("^\\+\\d{1,4}$")) {
-            throw new IllegalArgumentException("El código de país debe comenzar con '+' seguido de 1 a 4 dígitos.");
-        }
-        if (!numero.matches("^\\d{6,15}$")) {
+        if (!this.numero.matches("^\\d{6,15}$")) {
             throw new IllegalArgumentException("El número debe tener entre 6 y 15 dígitos.");
         }
-
-        this.codigoPais = codigoPais;
-        this.numero = numero;
+        if (this.codigoPais != null && !this.codigoPais.matches("^\\+\\d{1,4}$")) {
+            throw new IllegalArgumentException("El código de país debe comenzar con '+' seguido de 1 a 4 dígitos.");
+        }
     }
 
     public String getNumero() {
@@ -51,7 +43,7 @@ public class Telefono {
         if (this == object) return true;
         if (!(object instanceof Telefono)) return false;
         Telefono telefono = (Telefono) object;
-        return numero.equals(telefono.numero) && codigoPais.equals(telefono.codigoPais);
+        return numero.equals(telefono.numero) && Objects.equals(codigoPais, telefono.codigoPais);
     }
 
     @Override
@@ -61,6 +53,6 @@ public class Telefono {
 
     @Override
     public String toString() {
-        return codigoPais + " " + numero;
+        return (codigoPais != null ? codigoPais + " " : "") + numero;
     }
 }

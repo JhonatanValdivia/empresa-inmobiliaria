@@ -9,19 +9,17 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-public interface ComisionService
-{
-    List<Comision> listar();// findAll
-    List<Comision> todosPorId(List<Long> ids);//findAllById
-    Optional<Comision> porId(Long id); //findById
-    Comision guardar(Comision comision);//save
-    void eliminar(Long id);//deleteById
-    boolean existePorId(Long id);//existsById
+public interface ComisionService {
+    List<Comision> listar();
+    List<Comision> todosPorId(List<Long> ids);
+    Optional<Comision> porId(Long id);
+    Comision guardar(Comision comision);
+    void eliminar(Long id);
+    boolean existePorId(Long id);
     long contarComisiones();
     void eliminarComision(Comision comision);
-
-    //métodos remotos
     BigDecimal calcularComision(BigDecimal montoBase, TipoComision tipoComision);
     void cambiarEstadoComision(Long comisionId, EstadoComision nuevoEstado);
     List<Comision> listarActivas();
+    Optional<Comision> porIdConUsuario(Long id);
 }

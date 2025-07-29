@@ -9,22 +9,20 @@ import java.util.Objects;
 
 @Embeddable
 public class MontoComision {
+    @JsonProperty("precioVenta") // Mapear "precioVenta" del JSON a este campo
     private BigDecimal montoComision;
-    private String moneda;
 
+    @JsonProperty("moneda")     // Mapear "moneda" del JSON a este campo
+    private String moneda;
     protected  MontoComision(){}
 
     @JsonCreator
-    public MontoComision(@JsonProperty("montoComision") BigDecimal montoComision,
+    public MontoComision(@JsonProperty("precioVenta") BigDecimal montoComision,
                          @JsonProperty("moneda") String moneda) {
-
-        if (montoComision == null || montoComision.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("El monto debe ser mayor que cero");
-        }
         if (moneda == null || moneda.isBlank()) {
             throw new IllegalArgumentException("La moneda no puede ser vacía");
         }
-
+        // No validar montoComision aquí para evitar errores de deserialización
         this.montoComision = montoComision;
         this.moneda = moneda;
     }
@@ -32,10 +30,10 @@ public class MontoComision {
     public BigDecimal getMontoComision () {
         return montoComision;
     }
-
     public String getMoneda() {
         return moneda;
     }
+
     @Override
     public boolean equals(Object object){
         if(this==object)
@@ -55,6 +53,6 @@ public class MontoComision {
 
     @Override
     public String toString(){
-        return montoComision +" "+moneda;
+        return montoComision + " " +moneda;
     }
 }
