@@ -1,9 +1,6 @@
 package org.academico.springcloud.msvc.preventa.controllers;
 
 
-import feign.FeignException;
-import org.academico.springcloud.msvc.preventa.clients.UsuarioClientRest;
-import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
@@ -290,35 +287,5 @@ public class  PreventaController {
         Map<String, String> errores = result.getFieldErrors().stream()
                 .collect(Collectors.toMap(err -> err.getField(), err -> err.getDefaultMessage()));
         return ResponseEntity.badRequest().body(errores);
-    }
-
-    //Metodos remotos
-    // - asociar usuarios a la preventa(agente y cliente)
-    @PutMapping("/{idPreventa}/asociar-usuarios")
-    public  ResponseEntity<?> asociarUsuarios(@PathVariable Long idPreventa, @RequestBody Usuario agente, @RequestBody Usuario cliente){
-        Optional<Usuario> usuarioOp;
-        try{
-            usuarioOp=service.asociarUsuariosPreventa(idPreventa,agente,cliente);
-        }catch (FeignException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("Mensaje","El usuario no existe "+"o hubo un error en la comunicación" +e.getMessage()));
-        }
-        if (usuarioOp.isPresent()){
-            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioOp.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-    @DeleteMapping("{idPreventa}/desasociar-usuarios")
-    public ResponseEntity<?> desasociarUsuarios(@PathVariable Long idPreventa, @RequestBody Usuario agente, @RequestBody Usuario cliente){
-
-        Optional<Usuario> usuarioOp;
-        try{
-            usuarioOp=service.desasociarUsuarioPreventa(idPreventa,agente,cliente);
-        }catch (FeignException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("Mensaje","El usuario no existe "+"o hubo un error en la comunicación" +e.getMessage()));
-        }
-        if (usuarioOp.isPresent()){
-            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioOp.get());
-        }
-        return ResponseEntity.notFound().build();
     }
 }

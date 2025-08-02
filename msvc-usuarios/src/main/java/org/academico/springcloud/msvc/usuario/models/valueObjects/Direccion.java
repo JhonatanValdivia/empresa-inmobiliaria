@@ -1,7 +1,5 @@
 package org.academico.springcloud.msvc.usuario.models.valueObjects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
 
@@ -9,40 +7,30 @@ import java.util.Objects;
 
 @Embeddable
 public class Direccion {
-
+    @NotBlank(message = "El ubigeo es obligatorio.")
     private String ubigeo;
 
+    @NotBlank(message = "La ciudad es obligatoria.")
     private String ciudad;
 
+    @NotBlank(message = "La dirección es obligatoria.")
     private String direccion;
 
-    protected Direccion() {}
+    public Direccion() {}
 
-    @JsonCreator
-    public Direccion(@JsonProperty("ubigeo") String ubigeo, @JsonProperty("ciudad") String ciudad,
-                     @JsonProperty("direccion")String direccion) {
+    public Direccion(String ubigeo, String ciudad, String direccion) {
         if (ubigeo == null || ubigeo.trim().isEmpty()) {
             throw new IllegalArgumentException("El ubigeo es obligatorio.");
-        }
-        if (!ubigeo.matches("\\d{6}")) {
-            throw new IllegalArgumentException("El ubigeo debe tener exactamente 6 dígitos numéricos.");
         }
         if (ciudad == null || ciudad.trim().isEmpty()) {
             throw new IllegalArgumentException("La ciudad es obligatoria.");
         }
-        if (ciudad.length() > 100) {
-            throw new IllegalArgumentException("La ciudad no puede tener más de 100 caracteres.");
-        }
         if (direccion == null || direccion.trim().isEmpty()) {
             throw new IllegalArgumentException("La dirección es obligatoria.");
         }
-        if (direccion.length() > 255) {
-            throw new IllegalArgumentException("La dirección no puede tener más de 255 caracteres.");
-        }
-
         this.ubigeo = ubigeo.trim();
         this.ciudad = ciudad.trim();
-        this.direccion = direccion.trim().replaceAll("\\s+", " ");
+        this.direccion = direccion.trim();
     }
 
     public String getUbigeo() { return ubigeo; }
@@ -54,9 +42,7 @@ public class Direccion {
         if (this == object) return true;
         if (!(object instanceof Direccion)) return false;
         Direccion dir = (Direccion) object;
-        return ubigeo.equals(dir.ubigeo)
-                && ciudad.equals(dir.ciudad)
-                && direccion.equals(dir.direccion);
+        return ubigeo.equals(dir.ubigeo) && ciudad.equals(dir.ciudad) && direccion.equals(dir.direccion);
     }
 
     @Override

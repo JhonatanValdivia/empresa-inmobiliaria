@@ -2,11 +2,9 @@ package org.academico.springcloud.msvc.usuario.models.valueObjects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Embeddable;
 
 import java.util.Objects;
 
-@Embeddable
 public class NombreCompleto {
     private String primerNombre;
     private String segundoNombre;

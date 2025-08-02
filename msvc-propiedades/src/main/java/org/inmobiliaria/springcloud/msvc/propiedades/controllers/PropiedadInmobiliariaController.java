@@ -268,21 +268,7 @@ public class PropiedadInmobiliariaController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/crear-norma/{propiedadId}")
-    public ResponseEntity<?> crearNorma(@RequestBody Norma norma, @PathVariable Long propiedadId) {
-        Optional<Norma> normaOptional;
-        try {
-            normaOptional = service.crearNorma(norma, propiedadId);
-        } catch (FeignException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("Mensaje", "No se pudo crear la norma, error en la comunicación: " + e.getMessage()));
-        }
 
-        if (normaOptional.isPresent())
-            return ResponseEntity.status(HttpStatus.CREATED).body(normaOptional.get());
-
-        return ResponseEntity.notFound().build();
-    }
 
     @GetMapping("/listar-normas")
     public ResponseEntity<?> listarNormas() {

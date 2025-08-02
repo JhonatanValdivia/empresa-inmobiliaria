@@ -1,12 +1,5 @@
 package org.academico.springcloud.msvc.preventa.models;
 
-import jakarta.persistence.Embedded;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-
-
-//pojo
-public class Usuario {
     private Long id;
 
     private NombreCompleto nombreCompleto;

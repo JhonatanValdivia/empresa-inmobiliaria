@@ -1,88 +1,67 @@
 package org.academico.springcloud.msvc.usuario.models.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.academico.springcloud.msvc.usuario.models.enums.TipoUsuario;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.CorreoElectronico;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.Direccion;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.NombreCompleto;
-import org.academico.springcloud.msvc.usuario.models.valueObjects.Telefono;
 
 @Entity
 @Table(name = "usuarios")
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id_usuario")
+    private Long idUsuario;
 
-    @Embedded
-    private NombreCompleto nombreCompleto;
+    @NotBlank(message = "El nombre no puede estar vacío")
+    @Column(name = "nombres")
+    private String nombres;
+
+    @NotBlank(message = "El apellido no puede estar vacío")
+    @Column(name = "apellidos")
+    private String apellidos;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_usuario")
+    @NotNull(message = "El tipo de usuario es obligatorio")
     private TipoUsuario tipoUsuario;
 
-    @Embedded
-    private Telefono telefono;
+    @Column(name = "telefono")
+    private String telefono; // Almacena el teléfono como texto plano
 
-    @Embedded
-    private CorreoElectronico correoElectronico;
+    @Column(name = "correo_electronico")
+    private String correoElectronico; // Almacena el correo como texto plano
 
-    @Embedded
-    private Direccion direccion;
+    @Column(name = "direccion")
+    private String direccion; // Almacena la dirección como texto plano
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "estado")
+    private String estado = "ACTIVO";
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // Constructores
+    public Usuario() {}
 
-    public NombreCompleto getNombreCompleto() {
-        return nombreCompleto;
-    }
-
-    public void setNombreCompleto(NombreCompleto nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
-    }
-
-    public TipoUsuario getTipoUsuario() {
-        return tipoUsuario;
-    }
-
-    public void setTipoUsuario(TipoUsuario tipoUsuario) {
+    public Usuario(String nombres, String apellidos, TipoUsuario tipoUsuario) {
+        this.nombres = nombres;
+        this.apellidos = apellidos;
         this.tipoUsuario = tipoUsuario;
     }
 
-    public Telefono getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(Telefono telefono) {
-        this.telefono = telefono;
-    }
-
-    public CorreoElectronico getCorreoElectronico() {
-        return correoElectronico;
-    }
-
-    public void setCorreoElectronico(CorreoElectronico correoElectronico) {
-        this.correoElectronico = correoElectronico;
-    }
-
-    public Direccion getDireccion() {
-        return direccion;
-    }
-
-    public void setDireccion(Direccion direccion) {
-        this.direccion = direccion;
-    }
-    public void asignarRol(TipoUsuario rol) {
-        this.tipoUsuario = rol;
-    }
-    public void actualizarDatos(NombreCompleto nombre, Telefono telefono, CorreoElectronico correo, Direccion direccion) {
-        this.nombreCompleto = nombre;
-        this.telefono = telefono;
-        this.correoElectronico = correo;
-        this.direccion = direccion;
-    }
+    // Getters y setters
+    public Long getIdUsuario() { return idUsuario; }
+    public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
+    public String getNombres() { return nombres; }
+    public void setNombres(String nombres) { this.nombres = nombres; }
+    public String getApellidos() { return apellidos; }
+    public void setApellidos(String apellidos) { this.apellidos = apellidos; }
+    public TipoUsuario getTipoUsuario() { return tipoUsuario; }
+    public void setTipoUsuario(TipoUsuario tipoUsuario) { this.tipoUsuario = tipoUsuario; }
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getCorreoElectronico() { return correoElectronico; }
+    public void setCorreoElectronico(String correoElectronico) { this.correoElectronico = correoElectronico; }
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 }

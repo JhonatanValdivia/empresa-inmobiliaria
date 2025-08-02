@@ -214,25 +214,7 @@ public class PropiedadInmobiliariaServiceImpl implements PropiedadInmobiliariaSe
         return Optional.empty();
     }
 
-    @Override
-    @Transactional
-    public Optional<Norma> crearNorma(Norma norma, Long propiedadId) {
-        Optional<PropiedadInmobiliaria> op = repo.findById(propiedadId);
 
-        if(op.isPresent()){
-            Norma normaMsvc = inmobiliariaClientRest.crear(norma);
-            PropiedadInmobiliaria propiedadInmobiliaria = op.get();
-            PropiedadInmobiliariaNorma propiedadInmobiliariaNorma = new PropiedadInmobiliariaNorma();
-            propiedadInmobiliariaNorma.setNormaId(normaMsvc.getIdNorma());
-
-            propiedadInmobiliaria.addPropiedadNorma(propiedadInmobiliariaNorma);
-            repo.save(propiedadInmobiliaria);
-            return Optional.of(normaMsvc);
-
-        }
-
-        return Optional.empty();
-    }
 
     @Override
     @Transactional

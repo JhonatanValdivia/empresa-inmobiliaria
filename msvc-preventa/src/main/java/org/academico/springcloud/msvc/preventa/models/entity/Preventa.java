@@ -51,7 +51,7 @@ public class Preventa {
     private Long usuarioClienteId;
 
     public Preventa() {
-            this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
+        this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
         this.fechaInicio = LocalDate.now();
         this.contratoVenta = null; // Inicialmente no hay contrato
         this.propuestasPago = new ArrayList<>();
@@ -122,7 +122,7 @@ public class Preventa {
         propuesta.setPreventa(this);
     }
 
-        public void addVisitaProgramada(VisitaProgramada visita) {
+    public void addVisitaProgramada(VisitaProgramada visita) {
         this.visitasProgramadas.add(visita);
         visita.setPreventa(this);
     }
