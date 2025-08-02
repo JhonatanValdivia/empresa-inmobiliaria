@@ -1,5 +1,6 @@
 package org.academico.springcloud.msvc.preventa.services;
 
+import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
@@ -42,4 +43,8 @@ public interface PreventaService {
     Optional<VisitaProgramada> actualizarVisitaProgramada(Long preventaId, Long visitaId, VisitaProgramada visitaActualizada);
     Optional<VisitaProgramada> reprogramarVisitaPreventa(Long preventaId, Long visitaId, LocalDate fecha); // Método de negocio
     Optional<VisitaProgramada> actualizarEstadoVisitaPreventa(Long preventaId, Long visitaId, EstadoVisita estadoVisita     ); // Método de negocio
+
+    // métodos remotos: relación con el microservicio Usuarios
+     Optional<Usuario> asociarUsuariosPreventa(Long idPreventa, Usuario agente, Usuario cliente);
+     Optional<Usuario> desasociarUsuarioPreventa(Long idPreventa, Usuario agente, Usuario cliente);
 }

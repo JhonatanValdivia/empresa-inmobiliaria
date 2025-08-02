@@ -2,6 +2,7 @@ package org.academico.springcloud.msvc.preventa.models.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference; // Importar esta
 import jakarta.persistence.*;
+import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.enums.EstadoPreventa;
 import org.academico.springcloud.msvc.preventa.models.enums.MetodoPago;
 import org.academico.springcloud.msvc.preventa.models.enums.TipoContrato;
@@ -41,6 +42,13 @@ public class Preventa {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "preventa")
     @JsonManagedReference // AÑADIDO: Este lado gestiona la serialización de las visitas
     private List<VisitaProgramada> visitasProgramadas;
+
+    //relación con Usuario(agente y cliente)
+    @Column(name="agente_id",unique = true)
+    private Long usuarioAgenteId;
+
+    @Column(name = "cliente_id",unique=true)
+    private Long usuarioClienteId;
 
     public Preventa() {
             this.estado = EstadoPreventa.EN_EVALUACION; // Estado inicial
@@ -85,6 +93,21 @@ public class Preventa {
     }
     public void setVisitasProgramadas(List<VisitaProgramada> visitasProgramadas) {this.visitasProgramadas = visitasProgramadas;}
 
+    public Long getUsuarioAgenteId() {
+        return usuarioAgenteId;
+    }
+
+    public void setUsuarioAgenteId(Long usuarioAgenteId) {
+        this.usuarioAgenteId = usuarioAgenteId;
+    }
+
+    public Long getUsuarioClienteId() {
+        return usuarioClienteId;
+    }
+
+    public void setUsuarioClienteId(Long usuarioClienteId) {
+        this.usuarioClienteId = usuarioClienteId;
+    }
 
     public void aprobarPreventa() {
         if (this.estado != EstadoPreventa.EN_EVALUACION) {
@@ -93,8 +116,6 @@ public class Preventa {
         this.estado = EstadoPreventa.APROBADA;
         System.out.println("Preventa " + this.id + " marcada como APROBADA.");
     }
-
-
 
     public void addPropuestaPago(PropuestaPago propuesta) {
         this.propuestasPago.add(propuesta);

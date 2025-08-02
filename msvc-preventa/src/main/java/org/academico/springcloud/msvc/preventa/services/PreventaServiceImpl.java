@@ -1,5 +1,7 @@
 package org.academico.springcloud.msvc.preventa.services;
 
+import org.academico.springcloud.msvc.preventa.clients.UsuarioClientRest;
+import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
@@ -22,6 +24,9 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Autowired
     private PreventaRepository repository;
+
+    @Autowired
+    private UsuarioClientRest usuarioClientRest;
 
     @Override
     @Transactional(readOnly = true)
@@ -266,6 +271,53 @@ public class PreventaServiceImpl implements PreventaService {
                 repository.save(preventa);
                 return Optional.of(visita);
             }
+        }
+        return Optional.empty();
+    }
+
+    //metodo relación Preventa con Usuarios
+    @Override
+    @Transactional
+    public Optional <Usuario> asociarUsuariosPreventa(Long idPreventa, Usuario  agente, Usuario cliente) {
+         Optional<Preventa> preventaOp= repository.findById(idPreventa);
+        if(preventaOp.isPresent()){
+            Preventa preventa=preventaOp.get();
+            Usuario agenteUsu=usuarioClientRest.detalleUsuario(agente.getId());
+            Usuario clienteUsu=usuarioClientRest.detalleUsuario(agente.getId());
+
+            if(agenteUsu.getTipoUsuario()!=Usuario.TipoUsuario.AGENTE){
+                throw new IllegalArgumentException("El usuario no es un agente");
+            }
+
+            if(clienteUsu.getTipoUsuario()!= Usuario.TipoUsuario.CLIENTE){
+                throw new IllegalArgumentException("El usuario no es un cliente");
+            }
+
+            preventa.setUsuarioClienteId(clienteUsu.getId());
+            preventa.setUsuarioAgenteId(agenteUsu.getId());
+            repository.save(preventa);
+
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Usuario> desasociarUsuarioPreventa(Long idPreventa, Usuario agente, Usuario cliente) {
+        Optional<Preventa> preventaOp=repository.findById(idPreventa);
+        if (preventaOp.isPresent()){
+            Preventa preventa=preventaOp.get();
+            Usuario agenteUsu=usuarioClientRest.detalleUsuario(agente.getId());
+            Usuario clienteUsu=usuarioClientRest.detalleUsuario(cliente.getId());
+
+            if(agenteUsu.getTipoUsuario()!= Usuario.TipoUsuario.AGENTE){
+                throw new IllegalArgumentException("El usuario no es un agente");
+            }
+            if(clienteUsu.getTipoUsuario()!= Usuario.TipoUsuario.CLIENTE){
+                throw new IllegalArgumentException("El usuario no es un cliente");
+            }
+            preventa.setUsuarioAgenteId(null);
+            preventa.setUsuarioClienteId(null);
+            repository.save(preventa);
         }
         return Optional.empty();
     }
