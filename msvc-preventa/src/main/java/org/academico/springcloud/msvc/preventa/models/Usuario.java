@@ -1,7 +1,5 @@
 package org.academico.springcloud.msvc.preventa.models;
-
-public class Usuario
-{
+public  class Usuario{
     private Long id;
 
     private NombreCompleto nombreCompleto;
