@@ -1,18 +1,19 @@
 package org.academico.springcloud.msvc.preventa.services;
 
+import org.academico.springcloud.msvc.preventa.clients.PropiedadClientRest;
+import org.academico.springcloud.msvc.preventa.clients.UsuarioClientsRest;
+import org.academico.springcloud.msvc.preventa.models.PropiedadInmobiliaria;
+import org.academico.springcloud.msvc.preventa.models.Usuario;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
 import org.academico.springcloud.msvc.preventa.models.entity.VisitaProgramada;
 import org.academico.springcloud.msvc.preventa.models.enums.EstadoVisita;
-import org.academico.springcloud.msvc.preventa.models.enums.MetodoPago;
-import org.academico.springcloud.msvc.preventa.models.enums.TipoContrato;
 import org.academico.springcloud.msvc.preventa.repositories.PreventaRepository;
+import org.academico.springcloud.msvc.preventa.models.enums.enumsPropiedades.EstadoPropiedad;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,12 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Autowired
     private PreventaRepository repository;
+
+    @Autowired
+    private UsuarioClientsRest usuarioClientRest;
+
+    @Autowired
+    private PropiedadClientRest propiedadClientRest;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,7 +44,20 @@ public class PreventaServiceImpl implements PreventaService {
 
     @Override
     @Transactional
-    public Preventa guardar(Preventa preventa) {
+    public Preventa guardar(Preventa preventa, Long idPropiedad) {
+        // Verificar si la propiedad existe y está disponible
+        PropiedadInmobiliaria propiedad = propiedadClientRest.detallePropiedad(idPropiedad);
+        if (propiedad == null) {
+            throw new IllegalArgumentException("Propiedad no encontrada con ID: " + idPropiedad);
+        }
+        if (propiedad.getEstado() == null || !propiedad.getEstado().equals(EstadoPropiedad.DISPONIBLE)) {
+            throw new IllegalArgumentException("La propiedad con ID " + idPropiedad + " no está disponible");
+        }
+
+        // Asignar el idPropiedad a la preventa
+        preventa.setPropiedadId(idPropiedad);
+
+        // Guardar la preventa
         return repository.save(preventa);
     }
 
@@ -268,5 +288,45 @@ public class PreventaServiceImpl implements PreventaService {
             }
         }
         return Optional.empty();
+    }
+
+    //metodo relación Preventa con Usuarios
+    @Override
+    @Transactional
+    public Preventa asociarUsuariosPreventa(Long idPreventa, Long idAgente, Long idCliente) {
+        Usuario agente = usuarioClientRest.detalleUsuario(idAgente);
+        if (agente.getTipoUsuario()!= Usuario.TipoUsuario.AGENTE) {
+            throw new IllegalArgumentException("El usuario no es un agente válido");
+        }
+
+        Usuario cliente = usuarioClientRest.detalleUsuario(idCliente);
+        if (cliente.getTipoUsuario()!= Usuario.TipoUsuario.CLIENTE) {
+            throw new IllegalArgumentException("El usuario no es un cliente válido");
+        }
+
+        Preventa preventa = repository.findById(idPreventa)
+                .orElseThrow(() -> new IllegalArgumentException("Preventa no encontrada"));
+
+        preventa.setUsuarioAgenteId(idAgente);
+        preventa.setUsuarioClienteId(idCliente);
+        return repository.save(preventa);
+    }
+
+    @Override
+    @Transactional
+    public Preventa asociarPropiedadPreventa(Long idPreventa, Long idPropiedad) {
+        // Verificar si la propiedad existe
+        PropiedadInmobiliaria propiedad = propiedadClientRest.detallePropiedad(idPropiedad);
+        if (propiedad == null) {
+            throw new IllegalArgumentException("Propiedad no encontrada con ID: " + idPropiedad);
+        }
+
+        // Obtener la preventa
+        Preventa preventa = repository.findById(idPreventa)
+                .orElseThrow(() -> new IllegalArgumentException("Preventa no encontrada con ID: " + idPreventa));
+
+        // Asociar la propiedad (solo el ID por ahora)
+        preventa.setPropiedadId(idPropiedad);
+        return repository.save(preventa);
     }
 }

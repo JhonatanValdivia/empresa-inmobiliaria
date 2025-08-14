@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/comisiones")
+@RequestMapping("api/comision")
 public class ComisionController {
 
     @Autowired
@@ -25,13 +25,12 @@ public class ComisionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> detalleComision(@PathVariable Long id) {
-        Optional<Comision> comisionOp = comisionService.porId(id);
-        if (comisionOp.isPresent()) {
-            return ResponseEntity.ok(comisionOp.get());
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Comision> detalle(@PathVariable Long id) {
+        Optional<Comision> comision = comisionService.porIdConUsuario(id);
+        return comision.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Comision comision) {
         try {
@@ -39,8 +38,11 @@ public class ComisionController {
             return ResponseEntity.status(HttpStatus.CREATED).body(comisionDB);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Ocurrió un error inesperado. Por favor, verifica los datos y vuelve a intentarlo."));
         }
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@RequestBody Comision comision, @PathVariable Long id) {
         Optional<Comision> comisionOp = comisionService.porId(id);
@@ -64,6 +66,7 @@ public class ComisionController {
         }
         return ResponseEntity.notFound().build();
     }
+
     @GetMapping("/contar")
     public ResponseEntity<?> contarComisiones() {
         return ResponseEntity.ok(comisionService.contarComisiones());
@@ -74,6 +77,7 @@ public class ComisionController {
         comisionService.cambiarEstadoComision(comisionId, estado);
         return ResponseEntity.ok(Collections.singletonMap("mensaje", "Estado actualizado"));
     }
+
     @GetMapping("/activas")
     public ResponseEntity<?> listarActivas() {
         return ResponseEntity.ok(comisionService.listarActivas());
@@ -90,6 +94,7 @@ public class ComisionController {
         }
         return ResponseEntity.notFound().build();
     }
+
     @GetMapping("/{comisionId}/verificar-pago")
     public ResponseEntity<?> verificarPago(@PathVariable Long comisionId) {
         Optional<Comision> comisionOp = comisionService.porId(comisionId);

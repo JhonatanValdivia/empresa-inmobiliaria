@@ -1,6 +1,8 @@
 package org.academico.springcloud.msvc.comision.services;
 
 import org.academico.springcloud.msvc.comision.clients.VentaClientRest;
+import org.academico.springcloud.msvc.comision.clients.UsuarioClientRest;
+import org.academico.springcloud.msvc.comision.models.Usuario;
 import org.academico.springcloud.msvc.comision.models.Venta;
 import org.academico.springcloud.msvc.comision.models.entities.Comision;
 import org.academico.springcloud.msvc.comision.models.enums.EstadoComision;
@@ -24,6 +26,9 @@ public class ComisionServiceImpl implements ComisionService {
     @Autowired
     private VentaClientRest ventaClientRest;
 
+    @Autowired
+    private UsuarioClientRest usuarioClientRest;
+
     @Override
     @Transactional(readOnly = true)
     public List<Comision> listar() {
@@ -45,12 +50,37 @@ public class ComisionServiceImpl implements ComisionService {
     @Override
     @Transactional
     public Comision guardar(Comision comision) {
+        // Verificar si ya existe una comisión para esta venta
+        if (comisionRepository.findByVentaId(comision.getVentaId()).isPresent()) {
+            throw new IllegalStateException("Ya existe una comisión para la venta con ID " + comision.getVentaId());
+        }
+
+        // Obtener la venta desde msvc-venta
         Venta venta = ventaClientRest.detalle(comision.getVentaId());
         if (venta == null || venta.getPrecioVenta() == null) {
-            throw new IllegalArgumentException("La venta o el precio de venta no están disponibles.");
+            throw new IllegalArgumentException("No se encontró la venta o el precio es nulo para el ID " + comision.getVentaId());
         }
-        BigDecimal montoComisionCalculado = calcularComision(venta.getPrecioVenta().getPrecioVenta(), comision.getTipoComision());
-        comision.setMontoComision(new MontoComision(montoComisionCalculado, venta.getPrecioVenta().getMoneda()));
+
+        // Obtener y validar el monto base de la venta (solo para PORCENTAJE)
+        BigDecimal montoBase = venta.getPrecioVenta().getMontoComision();
+        if (montoBase == null || montoBase.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto base de la venta debe ser mayor que cero");
+        }
+
+        // Calcular el monto de la comisión automáticamente
+        BigDecimal montoCalculado;
+        if (comision.getTipoComision() == TipoComision.PORCENTAJE) {
+            montoCalculado = montoBase.multiply(new BigDecimal("0.03")); // 3% del monto base
+        } else if (comision.getTipoComision() == TipoComision.FIJA) {
+            montoCalculado = new BigDecimal("2000.00"); // Monto fijo de 2000 soles
+        } else {
+            throw new IllegalArgumentException("Tipo de comisión no soportado: " + comision.getTipoComision());
+        }
+
+        // Asignar el monto calculado a la comisión
+        comision.setMontoComision(new MontoComision(montoCalculado, "PEN"));
+
+        // Guardar la comisión
         return comisionRepository.save(comision);
     }
 
@@ -100,5 +130,31 @@ public class ComisionServiceImpl implements ComisionService {
         return comisionRepository.findByEstadoComisionIn(
                 List.of(EstadoComision.PENDIENTE, EstadoComision.CONFIRMADA)
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Comision> porIdConUsuario(Long id) {
+        Optional<Comision> comisionOp = comisionRepository.findById(id);
+        if (comisionOp.isPresent()) {
+            Comision comision = comisionOp.get();
+
+            // Cargar información de la venta
+            Venta venta = ventaClientRest.detalle(comision.getVentaId());
+            if (venta == null) {
+                throw new IllegalStateException("No se encontró la venta con id=" + comision.getVentaId() + " para la comisión con id=" + id);
+            }
+            comision.setVenta(venta);
+
+            // Cargar información del usuario
+            Usuario usuario = usuarioClientRest.detalleUsuario(comision.getAgenteId());
+            if (usuario == null) {
+                throw new IllegalStateException("No se encontró el usuario con id=" + comision.getAgenteId() + " para la comisión con id=" + id);
+            }
+            comision.setUsuario(usuario);
+
+            return Optional.of(comision);
+        }
+        return Optional.empty();
     }
 }

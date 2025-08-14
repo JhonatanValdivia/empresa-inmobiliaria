@@ -21,14 +21,6 @@ public class PropiedadInmobiliaria {
     @Column(name = "id_propiedad")
     private Long idPropiedad;
 
-    public Long getIdPropiedad() {
-        return idPropiedad;
-    }
-
-    public void setIdPropiedad(Long idPropiedad) {
-        this.idPropiedad = idPropiedad;
-    }
-
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_propiedad", nullable = false)
     private TipoPropiedad tipoPropiedad;
@@ -178,6 +170,14 @@ public class PropiedadInmobiliaria {
         this.expediente = expediente;
     }
 
+    public Long getIdPropiedad() {
+        return idPropiedad;
+    }
+
+    public void setIdPropiedad(Long idPropiedad) {
+        this.idPropiedad = idPropiedad;
+    }
+
 
 
 
@@ -276,8 +276,4 @@ public class PropiedadInmobiliaria {
             this.expediente = expedienteEditado;
         }
     }
-
-
-
-
 }

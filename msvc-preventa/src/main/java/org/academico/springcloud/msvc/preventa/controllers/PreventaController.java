@@ -1,6 +1,8 @@
 package org.academico.springcloud.msvc.preventa.controllers;
 
 
+import org.academico.springcloud.msvc.preventa.clients.PropiedadClientRest;
+import org.academico.springcloud.msvc.preventa.models.PropiedadInmobiliaria;
 import org.academico.springcloud.msvc.preventa.models.entity.ContratoVenta;
 import org.academico.springcloud.msvc.preventa.models.entity.Preventa;
 import org.academico.springcloud.msvc.preventa.models.entity.PropuestaPago;
@@ -31,8 +33,10 @@ public class  PreventaController {
     @Autowired
     private PreventaService service;
 
-    // Agregado Raiz:
+    @Autowired private
+    PropiedadClientRest propiedadClientRest;
 
+    // Agregado Raiz:
     @GetMapping
     public ResponseEntity<List<Preventa>> listar() {
         return ResponseEntity.ok(service.listar());
@@ -42,7 +46,11 @@ public class  PreventaController {
     public ResponseEntity<?> detalle(@PathVariable Long id) {
         Optional<Preventa> preventaOp = service.porId(id);
         if (preventaOp.isPresent()) {
-            return ResponseEntity.ok(preventaOp.get());
+            Preventa preventa = preventaOp.get();
+            // Obtener los detalles de la propiedad usando el cliente Feign
+            PropiedadInmobiliaria propiedad = propiedadClientRest.detallePropiedad(preventa.getPropiedadId());
+            preventa.setPropiedad(propiedad); // Asegúrate de que Preventa tenga un campo 'propiedad' para esto
+            return ResponseEntity.ok(preventa);
         }
         return ResponseEntity.notFound().build();
     }
@@ -52,8 +60,22 @@ public class  PreventaController {
         if (result.hasErrors()) {
             return validar(result);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(preventa));
+        try {
+            // Validar que la propiedad exista antes de guardar
+            PropiedadInmobiliaria propiedad = propiedadClientRest.detallePropiedad(preventa.getPropiedadId());
+            if (propiedad == null) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "La propiedad con ID " + preventa.getPropiedadId() + " no existe"));
+            }
+            Preventa preventaGuardada = service.guardar(preventa, preventa.getPropiedadId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(preventaGuardada);
+        } catch (feign.FeignException.NotFound e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "La propiedad con ID " + preventa.getPropiedadId() + " no existe"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@RequestBody Preventa preventa, BindingResult result, @PathVariable Long id) {
@@ -65,7 +87,17 @@ public class  PreventaController {
             Preventa preventaDB = preventaOp.get();
             preventaDB.setFechaInicio(preventa.getFechaInicio());
             preventaDB.setEstado(preventa.getEstado());
-             return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(preventaDB));
+            // Si se proporciona un nuevo idPropiedad en el JSON, actualizarlo
+            if (preventa.getPropiedadId() != null) {
+                try {
+                    preventaDB = service.guardar(preventaDB, preventa.getPropiedadId());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+                }
+            } else {
+                preventaDB = service.guardar(preventaDB, preventaDB.getPropiedadId()); // Mantener el mismo idPropiedad
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(preventaDB);
         }
         return ResponseEntity.notFound().build();
     }
@@ -281,11 +313,31 @@ public class  PreventaController {
         return ResponseEntity.notFound().build();
     }
 
-
     // Método de utilidad para validación
     private ResponseEntity<Map<String, String>> validar(BindingResult result) {
         Map<String, String> errores = result.getFieldErrors().stream()
                 .collect(Collectors.toMap(err -> err.getField(), err -> err.getDefaultMessage()));
         return ResponseEntity.badRequest().body(errores);
+    }
+
+    //Metodo para asociar usuarios a la preventa(agente y cliente)
+    @PutMapping("/{idPreventa}/asociar-usuarios")
+    public  ResponseEntity<?> ascoarUsuarios(@PathVariable Long idPreventa,@RequestParam Long idAgente, @RequestParam Long idCliente){
+        try{
+            Preventa preventaUsuarios=service.asociarUsuariosPreventa(idPreventa,idAgente,idCliente);
+            return ResponseEntity.ok(preventaUsuarios);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error",e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{idPreventa}/asociar-propiedad")
+    public ResponseEntity<?> asociarPropiedad(@PathVariable Long idPreventa, @RequestParam Long idPropiedad) {
+        try {
+            Preventa preventa = service.asociarPropiedadPreventa(idPreventa, idPropiedad);
+            return ResponseEntity.ok(preventa);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 }

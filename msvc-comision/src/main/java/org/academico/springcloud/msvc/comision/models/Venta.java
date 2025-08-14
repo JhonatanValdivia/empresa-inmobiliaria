@@ -1,66 +1,21 @@
 package org.academico.springcloud.msvc.comision.models;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import org.academico.springcloud.msvc.comision.models.valueObjects.MontoComision;
 
-//pojo
+import java.math.BigDecimal;
+import java.util.List;
+
 public class Venta {
     private Long id;
     private String tipoVenta;
-    private String estadoVenta;
-    private FechaVenta fechaVenta; //OV
-    private PrecioVenta precioVenta; //OV
+    private String estado;
+    private Fecha fecha;
+    private MontoComision precioVenta;
+    private Long preventaId;
+    private List<DetalleVenta> detalleVentaLista;
+    private DetallePreventa detallePreventa;
 
-    public static class FechaVenta {
-        private int dia;
-        private int mes;
-        private int año;
-
-        public int getDia() {
-            return dia;
-        }
-
-        public void setDia(int dia) {
-            this.dia = dia;
-        }
-
-        public int getMes() {
-            return mes;
-        }
-
-        public void setMes(int mes) {
-            this.mes = mes;
-        }
-
-        public int getAño() {
-            return año;
-        }
-
-        public void setAño(int año) {
-            this.año = año;
-        }
-    }
-    public static class PrecioVenta{
-        private BigDecimal precioVenta;
-        private String moneda;
-
-        public BigDecimal getPrecioVenta() {
-            return precioVenta;
-        }
-
-        public void setPrecioVenta(BigDecimal precioVenta) {
-            this.precioVenta = precioVenta;
-        }
-
-        public String getMoneda() {
-            return moneda;
-        }
-
-        public void setMoneda(String moneda) {
-            this.moneda = moneda;
-        }
-    }
-
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -77,27 +32,86 @@ public class Venta {
         this.tipoVenta = tipoVenta;
     }
 
-    public String getEstadoVenta() {
-        return estadoVenta;
+    public String getEstado() {
+        return estado;
     }
 
-    public void setEstadoVenta(String estadoVenta) {
-        this.estadoVenta = estadoVenta;
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
-    public FechaVenta getFechaVenta() {
-        return fechaVenta;
+    public Fecha getFecha() {
+        return fecha;
     }
 
-    public void setFechaVenta(FechaVenta fechaVenta) {
-        this.fechaVenta = fechaVenta;
+    public void setFecha(Fecha fecha) {
+        this.fecha = fecha;
     }
 
-    public PrecioVenta getPrecioVenta() {
+    public MontoComision getPrecioVenta() {
         return precioVenta;
     }
 
-    public void setPrecioVenta(PrecioVenta precioVenta) {
+    public void setPrecioVenta(MontoComision precioVenta) {
         this.precioVenta = precioVenta;
+    }
+
+    public Long getPreventaId() {
+        return preventaId;
+    }
+
+    public void setPreventaId(Long preventaId) {
+        this.preventaId = preventaId;
+    }
+
+    public List<DetalleVenta> getDetalleVentaLista() {
+        return detalleVentaLista;
+    }
+
+    public void setDetalleVentaLista(List<DetalleVenta> detalleVentaLista) {
+        this.detalleVentaLista = detalleVentaLista;
+    }
+
+    public DetallePreventa getDetallePreventa() {
+        return detallePreventa;
+    }
+
+    public void setDetallePreventa(DetallePreventa detallePreventa) {
+        this.detallePreventa = detallePreventa;
+    }
+
+
+    // Clases auxiliares (ajusta según tu estructura)
+    public class Fecha {
+        private Integer dia;
+        private Integer mes;
+        private Integer año;
+
+        public Integer getDia() {return dia;}
+        public void setDia(Integer dia) {this.dia = dia;}
+        public Integer getMes() {return mes;}
+        public void setMes(Integer mes) {this.mes = mes;}
+        public Integer getAño() {return año;}
+        public void setAño(Integer año) {this.año = año;}
+    }
+
+    public class DetalleVenta {
+        private Long id;
+        private String descripcion;
+
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        public String getDescripcion() { return descripcion; }
+        public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    }
+
+    public class DetallePreventa {
+        private Long id;
+        private String estado;
+
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        public String getEstado() { return estado; }
+        public void setEstado(String estado) { this.estado = estado; }
     }
 }

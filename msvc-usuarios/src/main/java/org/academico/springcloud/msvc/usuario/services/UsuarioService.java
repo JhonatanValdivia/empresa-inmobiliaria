@@ -7,14 +7,21 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+
 public interface UsuarioService {
-    List<Usuario> obtenerTodosLosUsuarios();
+    List<Usuario> listar();
+
+    List<Usuario> listarTodosPorIds(List<Long> ids);
+
     Optional<Usuario> obtenerUsuarioPorId(Long id);
-    Usuario crearUsuario(Usuario usuario);
-    Usuario actualizarUsuario(Long id, Usuario usuario);
-    boolean eliminarUsuario(Long id);
-    Usuario desactivarUsuario(Long id);
-    Usuario activarUsuario(Long id);
-    List<Usuario> obtenerUsuariosActivos();
-    void asignarRol(Long id, TipoUsuario rol);}
+
+    Usuario guardarUsuario(Usuario usuario);
+
+    void eliminarUsuario(Long id);
+
+    long contarUsuarios();
+
+    boolean existePorId(Long id);
+
+    List<Usuario> listarUsuariosPorTipo(TipoUsuario tipoUsuario);
+}

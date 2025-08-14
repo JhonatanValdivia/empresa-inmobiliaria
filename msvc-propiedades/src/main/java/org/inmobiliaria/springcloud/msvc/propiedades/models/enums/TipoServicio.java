@@ -5,5 +5,6 @@ public enum TipoServicio {
     AGUA,
     GAS,
     INTERNET,
+    DESAGUE,
     OTRO
 }
