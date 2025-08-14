@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface InmobiliariaClientRest {
 
     @GetMapping("/api/norma/{id}")
-    Norma detalle(@PathVariable("id") Long id);
+    Norma detalle(@PathVariable Long id);
 
     @PostMapping("/api/norma")
     Norma crear(@RequestBody Norma norma);
