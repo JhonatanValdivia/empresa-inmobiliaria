@@ -21,14 +21,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Usuario> listar() {
+    public List<Usuario> obtenerTodosLosUsuarios() {
         return (List<Usuario>) usuarioRepository.findAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Usuario> listarTodosPorIds(List<Long> ids) {
-        return (List<Usuario>) usuarioRepository.findAllById(ids);
     }
 
     @Override
@@ -39,30 +33,64 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public Usuario guardarUsuario(Usuario usuario) {
+    public Usuario crearUsuario(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
 
     @Override
+    public Usuario actualizarUsuario(Long id, Usuario usuarioActualizado) {
+        Optional<Usuario> optionalUsuario = usuarioRepository.findById(id);
+        if (optionalUsuario.isPresent()) {
+            Usuario usuario = optionalUsuario.get();
+            usuario.setNombres(usuarioActualizado.getNombres());
+            usuario.setApellidos(usuarioActualizado.getApellidos());
+            usuario.setTipoUsuario(usuarioActualizado.getTipoUsuario());
+            usuario.setTelefono(usuarioActualizado.getTelefono());
+            usuario.setCorreoElectronico(usuarioActualizado.getCorreoElectronico());
+            usuario.setDireccion(usuarioActualizado.getDireccion());
+            return usuarioRepository.save(usuario);
+        }
+        return null;
+    }
+
+    @Override
     @Transactional
-    public void eliminarUsuario(Long id) {
-        usuarioRepository.deleteById(id);
+    public boolean eliminarUsuario(Long id) {
+        if (usuarioRepository.existsById(id)) {
+            usuarioRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public Usuario desactivarUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        usuario.setEstado("INACTIVO");
+        return usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public Usuario activarUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        usuario.setEstado("ACTIVO");
+        return usuarioRepository.save(usuario);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long contarUsuarios() {
-        return usuarioRepository.count();
+    public List<Usuario> obtenerUsuariosActivos() {
+        return usuarioRepository.findByEstado("ACTIVO");
     }
 
     @Override
     @Transactional
-    public boolean existePorId(Long id) {
-        return usuarioRepository.existsById(id);
-    }
-
-    @Override
-    public List<Usuario> listarUsuariosPorTipo(TipoUsuario tipoUsuario) {
-        return usuarioRepository.findByTipoUsuario(tipoUsuario);
+    public void asignarRol(Long id, TipoUsuario rol) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        usuario.setTipoUsuario(rol); // Asegúrate de que este setter exista
+        usuarioRepository.save(usuario);
     }
 }
